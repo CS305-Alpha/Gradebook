@@ -1,5 +1,12 @@
 --addStudentMgmt.sql - Gradebook
 
+--Edited by Bruno DaSilva, Andrew Figueroa, and Jonathan Middleton (Team Alpha)
+-- in support of CS305 coursework at Western Connecticut State University.
+
+--Licensed to others under CC 4.0 BY-SA-NC
+ 
+--This work is a derivative of Gradebook, originally developed by:
+
 --Sean Murthy
 --Data Science & Systems Lab (DASSL), Western Connecticut State University (WCSU)
 
@@ -237,9 +244,18 @@ RETURNS TABLE("FirstName" VARCHAR(50),
              )
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
+$$
+
+SELECT COALESCE(s.fname, ''),
+       COALESCE(s.mname, ''), 
+       COALESCE(s.lname, ''), 
+       schoolissuedid, email, year
+FROM student s
+WHERE LOWER(TRIM(COALESCE(s.fname))) LIKE LOWER(TRIM($1)) AND
+      LOWER(TRIM(COALESCE(s.mname))) LIKE LOWER(TRIM($2)) AND
+      LOWER(TRIM(COALESCE(s.lname))) like LOWER(TRIM($3));
+
+$$ LANGUAGE sql
 $$ LANGUAGE plpgsql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -283,9 +299,13 @@ CREATE OR REPLACE FUNCTION getStudentIDByIssuedID(schoolIssuedID VARCHAR(50))
 RETURNS INT
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
+$$
+
+SELECT s.id
+FROM student s
+WHERE LOWER(TRIM(s.schoolissuediD)) LIKE LOWER(TRIM($1));
+
+$$ LANGUAGE sql
 $$ LANGUAGE plpgsql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -309,10 +329,12 @@ alpha_GB_DBAdmin;
 CREATE OR REPLACE FUNCTION getStudentIDbyEmail(email VARCHAR(319))
 RETURNS INT AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+
+SELECT s.id
+FROM student s
+WHERE LOWER(TRIM(s.email)) LIKE LOWER(TRIM($1));
+
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
