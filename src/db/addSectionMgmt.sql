@@ -1,5 +1,12 @@
 --addSectionMgmt.sql - Gradebook
 
+--Edited by Bruno DaSilva, Andrew Figueroa, and Jonathan Middleton (Team Alpha)
+-- in support of CS305 coursework at Western Connecticut State University.
+
+--Licensed to others under CC 4.0 BY-SA-NC
+ 
+--This work is a derivative of Gradebook, originally developed by:
+ 
 --Sean Murthy
 --Data Science & Systems Lab (DASSL), Western Connecticut State University (WCSU)
 
@@ -170,10 +177,12 @@ $$ LANGUAGE sql
   RETURNS INT
   AS
   $$
-  BEGIN
-     RAISE WARNING 'Function not implemented';
-  END
-  $$ LANGUAGE plpgsql
+  SELECT s.ID
+  FROM Gradebook.Section s
+  WHERE s.term = $1 AND
+        LOWER(s.course) LIKE LOWER($2) AND
+        LOWER(s.sectionNumber) LIKE LOWER($3);
+  $$ LANGUAGE sql
      SECURITY DEFINER
    SET search_path FROM CURRENT
      STABLE
@@ -197,10 +206,13 @@ $$ LANGUAGE sql
   RETURNS INT
   AS
   $$
-  BEGIN
-     RAISE WARNING 'Function not implemented';
-  END
-  $$ LANGUAGE plpgsql
+
+  SELECT s.ID
+  FROM Gradebook.Section s
+  WHERE s.term = $1 AND
+      LOWER(s.crn) LIKE LOWER($2);
+
+  $$ LANGUAGE sql
      SECURITY DEFINER
    SET search_path FROM CURRENT
      STABLE
@@ -231,10 +243,16 @@ $$ LANGUAGE sql
                )
   AS
   $$
-  BEGIN
-     RAISE WARNING 'Function not implemented';
-  END
-  $$ LANGUAGE plpgsql
+
+  SELECT s.term, s.course, s.sectionnumber, s.crn, s.schedule, s.location,
+  s.startdate, s.enddate, s.midtermdate,
+    COALESCE(getInstructorName(s.instructor1),'') ||
+    COALESCE(', ' || getInstructorName(s.instructor2),'') ||
+    COALESCE(', ' || getInstructorName(s.instructor3),'')
+  FROM Gradeboook.section s
+  WHERE s.id = $1;
+
+  $$ LANGUAGE sql
      SECURITY DEFINER
    SET search_path FROM CURRENT
      STABLE
