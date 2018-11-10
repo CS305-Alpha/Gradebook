@@ -244,7 +244,6 @@ RETURNS TABLE("FirstName" VARCHAR(50),
              )
 AS
 $$
-$$
 
 SELECT COALESCE(s.fname, ''),
        COALESCE(s.mname, ''), 
@@ -256,7 +255,6 @@ WHERE LOWER(TRIM(COALESCE(s.fname))) LIKE LOWER(TRIM($1)) AND
       LOWER(TRIM(COALESCE(s.lname))) like LOWER(TRIM($3));
 
 $$ LANGUAGE sql
-$$ LANGUAGE plpgsql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
@@ -299,14 +297,13 @@ CREATE OR REPLACE FUNCTION getStudentIDByIssuedID(schoolIssuedID VARCHAR(50))
 RETURNS INT
 AS
 $$
-$$
 
 SELECT s.id
 FROM student s
 WHERE LOWER(TRIM(s.schoolissuediD)) LIKE LOWER(TRIM($1));
 
 $$ LANGUAGE sql
-$$ LANGUAGE plpgsql
+
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
