@@ -178,7 +178,7 @@ $$ LANGUAGE sql
   AS
   $$
   SELECT s.ID
-  FROM Gradebook.Section s
+  FROM alpha.Section s
   WHERE s.term = $1 AND
         LOWER(s.course) LIKE LOWER($2) AND
         LOWER(s.sectionNumber) LIKE LOWER($3);
@@ -208,7 +208,7 @@ $$ LANGUAGE sql
   $$
 
   SELECT s.ID
-  FROM Gradebook.Section s
+  FROM alpha.Section s
   WHERE s.term = $1 AND
       LOWER(s.crn) LIKE LOWER($2);
 
@@ -249,7 +249,7 @@ $$ LANGUAGE sql
     COALESCE(getInstructorName(s.instructor1),'') ||
     COALESCE(', ' || getInstructorName(s.instructor2),'') ||
     COALESCE(', ' || getInstructorName(s.instructor3),'')
-  FROM Gradeboook.section s
+  FROM alpha.section s
   WHERE s.id = $1;
 
   $$ LANGUAGE sql
