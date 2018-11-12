@@ -340,6 +340,40 @@ alpha_GB_Admissions, alpha_GB_DBAdmin;
 --Returns a table of rows from the Course table. Without arguments, returns all
 --courses. Returns courses held during the specified year. Returns no rows if a
 --match is not made.
+CREATE OR REPLACE FUNCTION showCoursesByYear()
+RETURNS TABLE(Number VARCHAR(8),
+              Title VARCHAR(100),
+              InstructorFullName VARCHAR(100),
+              StartDate DATE,
+              EndDate DATE
+             )
+AS
+$$
+SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
+                      COALESCE(', ' getInstructorName(instructor2),' ') ||
+                      COALESCE(', ' getInstructorName(instructor3))
+), startdate, EndDate
+FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
+SORT BY t.year;
+
+$$ LANGUAGE sql
+   SECURITY DEFINER
+   SET search_path FROM CURRENT
+   STABLE
+   RETURNS NULL ON NULL INPUT;
+
+ALTER FUNCTION showCoursesByYear() OWNER TO CURRENT_USER;
+
+REVOKE ALL ON FUNCTION showCoursesByYear() FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION showCoursesByYear() TO alpha_GB_Webapp,
+alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
+alpha_GB_Admissions, alpha_GB_DBAdmin;
+
+
+--Returns a table of rows from the Course table. Without arguments, returns all
+--courses. Returns courses held during the specified year. Returns no rows if a
+--match is not made.
 CREATE OR REPLACE FUNCTION showCoursesByYear(year NUMERIC(4,0))
 RETURNS TABLE(Number VARCHAR(8),
               Title VARCHAR(100),
@@ -349,10 +383,13 @@ RETURNS TABLE(Number VARCHAR(8),
              )
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
+                      COALESCE(', ' getInstructorName(instructor2),' ') ||
+                      COALESCE(', ' getInstructorName(instructor3))
+), startdate, EndDate
+FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
+WHERE t.year = $1;
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
@@ -379,10 +416,13 @@ RETURNS TABLE(Number VARCHAR(8),
              )
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
+                      COALESCE(', ' getInstructorName(instructor2),' ') ||
+                      COALESCE(', ' getInstructorName(instructor3))
+), startdate, EndDate
+FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
+WHERE t.id = $1;
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
