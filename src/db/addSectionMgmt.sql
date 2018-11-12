@@ -195,7 +195,7 @@ $$ LANGUAGE sql
   sectionNumber VARCHAR(3)) FROM PUBLIC;
 
   GRANT EXECUTE ON FUNCTION getSectionID(term INT, courseNumber VARCHAR(8),
-  sectionNumber VARCHAR(3)) TO GB_Webapp, alpha_GB_Instructor, alpha_GB_Student,
+  sectionNumber VARCHAR(3)) TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student,
   alpha_GB_Registrar, alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
@@ -222,9 +222,9 @@ $$ LANGUAGE sql
 
   REVOKE ALL ON FUNCTION getSectionID(term INT, CRN VARCHAR(5)) FROM PUBLIC;
 
-  GRANT EXECUTE ON FUNCTION getSectionID(term INT, CRN VARCHAR(5)) TO GB_Webapp,
-  alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, alpha_GB_Admissions,
-  alpha_GB_DBAdmin;
+  GRANT EXECUTE ON FUNCTION getSectionID(term INT, CRN VARCHAR(5)) 
+  TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
+  alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
   --Returns a table describing the section, which is populated with rows in
@@ -262,8 +262,9 @@ $$ LANGUAGE sql
 
   REVOKE ALL ON FUNCTION getSection(sectionID INT) FROM PUBLIC;
 
-  GRANT EXECUTE ON FUNCTION getSection(sectionID INT) TO GB_Webapp, alpha_GB_Instructor,
-  alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+  GRANT EXECUTE ON FUNCTION getSection(sectionID INT) TO alpha_GB_Webapp, 
+  alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
+  alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
   --Generates a list of class dates within a specified range. Uses char codes for
@@ -291,8 +292,8 @@ $$ LANGUAGE sql
   schedule VARCHAR(7)) FROM PUBLIC;
 
   GRANT EXECUTE ON FUNCTION getScheduleDates(startDate DATE, endDate DATE,
-  schedule VARCHAR(7)) TO GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
-  alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+  schedule VARCHAR(7)) TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, 
+  alpha_GB_Registrar, alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
   --Returns a table of rows from the section table where the title argument
@@ -325,8 +326,8 @@ $$ LANGUAGE sql
   FROM PUBLIC;
 
   GRANT EXECUTE ON FUNCTION searchSectionTitles(termID INT, title VARCHAR(100))
-  TO GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin,
-  alpha_GB_Admissions, alpha_GB_DBAdmin;
+  TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+  alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 COMMIT;
