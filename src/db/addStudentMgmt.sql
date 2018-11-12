@@ -277,7 +277,15 @@ alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 CREATE OR REPLACE FUNCTION getMyStudentID() RETURNS INT AS
 $$
 BEGIN
-   RAISE WARNING 'Function not implemented';
+IF NOT EXISTS (
+   SELECT id
+   FROM student
+   WHERE schoolissuedid like current_user)
+THEN RETURN NULL;
+ELSE
+   RETURN QUERY SELECT id
+                FROM student
+                WHERE schoolissuedid like current_user)
 END
 $$ LANGUAGE plpgsql
    SECURITY DEFINER
