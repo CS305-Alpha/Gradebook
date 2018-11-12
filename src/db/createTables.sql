@@ -91,15 +91,12 @@ CREATE TABLE SignificantDate
    Term INTEGER REFERENCES Term,
    Date DATE NOT NULL,
    Name VARCHAR(30) NOT NULL CHECK (TRIM(Name) <> ''), --"Memorial Day", "Snow Day", ...
-   ClosureStatus CHAR(1), --Degree of closing (see CHECK constraint)
-   Reason VARCHAR(30) NOT NULL, --"Holiday", "Weather", ...
-   PRIMARY KEY(Term, Date, Name),
-
-   --'C' represents complete closure, 'A' only administrative offices closed
-   CHECK (ClosureStatus IS NULL OR ClosureStatus IN ('C', 'A')),
+   ClassesHeld BOOLEAN NOT NULL, --Degree of closing (see CHECK constraint)
+   Reason VARCHAR(30), --"Holiday", "Weather", ...
+   PRIMARY KEY(Term, Date, Name)
 
    --May switch to CHAR(1) type
-   CHECK (Reason IN ('Holiday', 'Weather', 'Other'))
+   --CHECK (Reason IN ('Holiday', 'Weather', 'Other'))
 );
 
 ALTER TABLE SignificantDate OWNER TO CURRENT_USER;
