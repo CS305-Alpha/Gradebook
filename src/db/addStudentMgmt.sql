@@ -276,18 +276,8 @@ alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 --attribute matches SESSION_USER. Returns NULL if no such record found.
 CREATE OR REPLACE FUNCTION getMyStudentID() RETURNS INT AS
 $$
-BEGIN
-IF NOT EXISTS (
-   SELECT id
-   FROM student
-   WHERE schoolissuedid like current_user)
-THEN RETURN NULL;
-ELSE
-   RETURN QUERY SELECT id
-                FROM student
-                WHERE schoolissuedid like current_user)
-END
-$$ LANGUAGE plpgsql
+   SELECT id FROM student WHERE schoolissuedid like current_user;
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE;
