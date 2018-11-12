@@ -91,11 +91,11 @@ CREATE TABLE SignificantDate
    Term INTEGER REFERENCES Term,
    Date DATE NOT NULL,
    Name VARCHAR(30) NOT NULL CHECK (TRIM(Name) <> ''), --"Memorial Day", "Snow Day", ...
-   ClassesHeld BOOLEAN NOT NULL, --Degree of closing (see CHECK constraint)
-   Reason VARCHAR(30), --"Holiday", "Weather", ...
+   ClassesHeld BOOLEAN NOT NULL,
+   Reason VARCHAR(30), --"Holiday", "Weather", etc.
    PRIMARY KEY(Term, Date, Name)
 
-   --May switch to CHAR(1) type
+   --May be later implemented as a normalized table
    --CHECK (Reason IN ('Holiday', 'Weather', 'Other'))
 );
 
