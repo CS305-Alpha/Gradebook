@@ -363,7 +363,6 @@ SELECT s.id
 FROM student s
 WHERE TRIM(s.schoolissuediD) ILIKE TRIM($1);
 $$ LANGUAGE sql
-
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
