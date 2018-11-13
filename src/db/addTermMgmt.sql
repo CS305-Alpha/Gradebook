@@ -38,21 +38,30 @@ RETURNS VOID
 AS
 $$
 BEGIN
-   RAISE WARNING 'Function not implemented';
+   IF ($2 < getTermStart(term) OR $2 > getTermEnd(term)) THEN
+      RAISE EXCEPTION 'Significant date does not occur within given term';
+   END IF;
+
+   IF EXISTS(SELECT * FROM SignificantDate SD WHERE SD.Term = $1
+               AND SD.Date = $2 AND SD.Name ILIKE $3) THEN
+      RAISE EXCEPTION 'A matching significant date already exists';
+   END IF;
+
+   INSERT INTO SignificantDate VALUES ($1, $2, $3, $4, $5);
 END
 $$ LANGUAGE plpgsql
    SECURITY DEFINER
    SET search_path FROM CURRENT;
 
 ALTER FUNCTION addSignificantDate(term INT, date DATE, name VARCHAR(30),
-classesHeld BOOLEAN, reason VARCHAR(30)) OWNER TO CURRENT_USER;
+   classesHeld BOOLEAN, reason VARCHAR(30)) OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION addSignificantDate(term INT, date DATE, name VARCHAR(30),
-classesHeld BOOLEAN, reason VARCHAR(30)) FROM PUBLIC;
+   classesHeld BOOLEAN, reason VARCHAR(30)) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION addSignificantDate(term INT, date DATE,
-name VARCHAR(30), classesHeld BOOLEAN, reason VARCHAR(30))
-TO alpha_GB_RegistrarAdmin, alpha_GB_DBAdmin;
+   name VARCHAR(30), classesHeld BOOLEAN, reason VARCHAR(30))
+   TO alpha_GB_RegistrarAdmin, alpha_GB_DBAdmin;
 
 
 --Returns the ID of a term from a row in the Term table where the year and
