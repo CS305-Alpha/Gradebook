@@ -359,8 +359,8 @@ RETURNS TABLE(Number VARCHAR(8),
 AS
 $$
 SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
-                      COALESCE(', ' getInstructorName(instructor2),' ') ||
-                      COALESCE(', ' getInstructorName(instructor3))
+                      COALESCE(', ' || getInstructorName(instructor2),' ') ||
+                      COALESCE(', ' || getInstructorName(instructor3))
 ), startdate, EndDate
 FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
 SORT BY t.year;
@@ -393,8 +393,8 @@ RETURNS TABLE(Number VARCHAR(8),
 AS
 $$
 SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
-                      COALESCE(', ' getInstructorName(instructor2),' ') ||
-                      COALESCE(', ' getInstructorName(instructor3))
+                      COALESCE(', ' || getInstructorName(instructor2),' ') ||
+                      COALESCE(', ' || getInstructorName(instructor3))
 ), startdate, EndDate
 FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
 WHERE t.year = $1;
@@ -426,8 +426,8 @@ RETURNS TABLE(Number VARCHAR(8),
 AS
 $$
 SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
-                      COALESCE(', ' getInstructorName(instructor2),' ') ||
-                      COALESCE(', ' getInstructorName(instructor3))
+                      COALESCE(', ' || getInstructorName(instructor2),' ') ||
+                      COALESCE(', ' || getInstructorName(instructor3))
 ), startdate, EndDate
 FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
 WHERE t.id = $1;
