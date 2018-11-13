@@ -48,10 +48,17 @@ $$
          END;
 
 $$ LANGUAGE sql
+   SECURITY DEFINER
+SET search_path FROM CURRENT
    STABLE
    RETURNS NULL ON NULL INPUT
    ROWS 1;
 
+REVOKE ALL ON FUNCTION getSeason(VARCHAR(20)) FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION getSeason(VARCHAR(20)) 
+TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
+alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 --Function to get the details of the season matching a season order
 -- this function exists to support clients that pass season order as a number
@@ -72,10 +79,17 @@ $$
    WHERE "Order" = $1;
 
 $$ LANGUAGE sql
+   SECURITY DEFINER
+SET search_path FROM CURRENT
    STABLE
    RETURNS NULL ON NULL INPUT
    ROWS 1;
 
+REVOKE ALL ON FUNCTION getSeason(NUMERIC(1,0)) FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION getSeason(NUMERIC(1,0)) 
+TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
+alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Function to get the "order" of the season matching a "season identification"
@@ -90,8 +104,16 @@ $$
    FROM getSeason($1);
 
 $$ LANGUAGE sql
+   SECURITY DEFINER
+SET search_path FROM CURRENT
    STABLE
    RETURNS NULL ON NULL INPUT;
+
+REVOKE ALL ON FUNCTION getSeasonOrder(VARCHAR(20)) FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION getSeasonOrder(VARCHAR(20)) 
+TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
+alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
    --Returns a table listing season names and codes from the Season table.
    CREATE OR REPLACE FUNCTION listSeasons()
