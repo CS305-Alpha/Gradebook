@@ -293,6 +293,7 @@ RETURNS TABLE (ID INT,
                Course VARCHAR(8),
                SectionNumber VARCHAR(3),
                CRN VARCHAR(5),
+               Title VARCHAR(100),
                Schedule VARCHAR(7),
                Location VARCHAR(25),
                StartDate DATE,
@@ -304,10 +305,12 @@ RETURNS TABLE (ID INT,
               )
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+SELECT id, term, course, sectionnumber, CRN, schedule, location, startdate,
+    enddate, midtermdate, getInstructorName(instructor1), 
+    getInstructorName(instructor2), getInstructorName(instructor3)
+FROM section
+WHERE term = $1;
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
