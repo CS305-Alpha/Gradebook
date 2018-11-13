@@ -320,9 +320,9 @@ CREATE OR REPLACE FUNCTION getTermStudentCount(termID INT)
 RETURNS INT
 AS
 $$
-SELECT DISTINCT e.student 
+SELECT COUNT(SELECT DISTINCT e.student 
 FROM enrollee e JOIN section s ON e.section = s.id
-WHERE s.term = $1;
+WHERE s.term = $1);
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
