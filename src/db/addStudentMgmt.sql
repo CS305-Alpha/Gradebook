@@ -1,5 +1,12 @@
 --addStudentMgmt.sql - Gradebook
 
+--Edited by Bruno DaSilva, Andrew Figueroa, and Jonathan Middleton (Team Alpha)
+-- in support of CS305 coursework at Western Connecticut State University.
+
+--Licensed to others under CC 4.0 BY-SA-NC
+ 
+--This work is a derivative of Gradebook, originally developed by:
+
 --Sean Murthy
 --Data Science & Systems Lab (DASSL), Western Connecticut State University (WCSU)
 
@@ -44,7 +51,6 @@ $$ LANGUAGE sql
 ALTER FUNCTION getStudentYears(studentID INT) OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION getStudentYears(studentID INT) FROM PUBLIC;
-
 
 GRANT EXECUTE ON FUNCTION getStudentYears(studentID INT) TO alpha_GB_Webapp,
    alpha_GB_Instructor, alpha_GB_Registrar, alpha_GB_RegistrarAdmin,
@@ -105,8 +111,9 @@ REVOKE ALL ON FUNCTION getStudentSeasons(studentID INT, year NUMERIC(4,0))
    FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getStudentSeasons(studentID INT, year NUMERIC(4,0))
-   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar,
-   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+
+TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
+alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns a table listing the seasons in which the student specified by
@@ -303,10 +310,15 @@ RETURNS TABLE("FirstName" VARCHAR(50),
              )
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+SELECT COALESCE(s.fname, ''),
+       COALESCE(s.mname, ''), 
+       COALESCE(s.lname, ''), 
+       schoolissuedid, email, year
+FROM student s
+WHERE TRIM(COALESCE(s.fname, '')) ILIKE TRIM($1) AND
+      TRIM(COALESCE(s.mname, '')) ILIKE TRIM($2) AND
+      TRIM(COALESCE(s.lname, '')) ILIKE TRIM($3);
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
@@ -327,10 +339,8 @@ alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 --attribute matches SESSION_USER. Returns NULL if no such record found.
 CREATE OR REPLACE FUNCTION getMyStudentID() RETURNS INT AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+   SELECT id FROM student WHERE schoolissuedid like current_user;
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE;
@@ -349,10 +359,10 @@ CREATE OR REPLACE FUNCTION getStudentIDByIssuedID(schoolIssuedID VARCHAR(50))
 RETURNS INT
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+SELECT s.id
+FROM student s
+WHERE TRIM(s.schoolissuediD) ILIKE TRIM($1);
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
@@ -375,10 +385,10 @@ alpha_GB_Admissions, alpha_GB_DBAdmin;
 CREATE OR REPLACE FUNCTION getStudentIDbyEmail(email VARCHAR(319))
 RETURNS INT AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+SELECT s.id
+FROM student s
+WHERE TRIM(s.email) ILIKE TRIM($1);
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
@@ -389,61 +399,81 @@ ALTER FUNCTION getStudentIDbyEmail(email VARCHAR(319)) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION getStudentIDbyEmail(email VARCHAR(319)) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getStudentIDbyEmail(email VARCHAR(319)) 
-TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+
+TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
+alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+
 
 
 --Changes midtermGradeAwarded in a row of the Enrollee table where the row's
 --student attribute matches the argument student, and where the student is in
 --the section that the instructor teaches.
-CREATE OR REPLACE FUNCTION assignMidtermGrade(student INT,
+CREATE OR REPLACE FUNCTION assignMidtermGrade(student INT, sectionID INT
                                               midtermGradeAwarded VARCHAR(2)
                                              )
 RETURNS VOID
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
+IF NOT EXISTS 
+   SELECT * FROM section s
+   WHERE s.id = $2 AND getInstructorID(session_user) IN (
+      instructor1, instructor2, instructor3
+   )
+   THEN
+   RAISE EXCEPTION 'Current user is not an instructor of specified student'
+   ELSE
+UPDATE enrollee
+SET midtermgradeawarded = $3
+WHERE student = $1;
 $$ LANGUAGE plpgsql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    RETURNS NULL ON NULL INPUT;
 
-ALTER FUNCTION assignMidtermGrade(student INT, midtermGradeAwarded VARCHAR(2))
+ALTER FUNCTION assignMidtermGrade(student INT, sectionID INT, 
+               midtermGradeAwarded VARCHAR(2))
 OWNER TO CURRENT_USER;
 
-REVOKE ALL ON FUNCTION assignMidtermGrade(student INT,
+REVOKE ALL ON FUNCTION assignMidtermGrade(student INT, sectionID INT,
 midtermGradeAwarded VARCHAR(2)) FROM PUBLIC;
 
-GRANT EXECUTE ON FUNCTION assignMidtermGrade(student INT,
+GRANT EXECUTE ON FUNCTION assignMidtermGrade(student INT, sectionID INT,
 midtermGradeAwarded VARCHAR(2)) TO alpha_GB_Instructor, alpha_GB_DBAdmin;
 
 
 --Changes finalGradeAwarded in a row of the Enrollee table where the row's
 --student attribute matches the argument student, and where the student is in
 --the section that the instructor teaches.
-CREATE OR REPLACE FUNCTION assignFinalGrade(student INT,
+CREATE OR REPLACE FUNCTION assignFinalGrade(student INT, sectionID INT,
                                             finalGradeAwarded VARCHAR(2)
                                            )
 RETURNS VOID
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
+IF NOT EXISTS 
+   SELECT * FROM section s
+   WHERE s.id = $2 AND getInstructorID(session_user) IN (
+      instructor1, instructor2, instructor3
+   )
+   THEN
+   RAISE EXCEPTION 'Current user is not an instructor of specified student'
+   ELSE
+UPDATE enrollee
+SET finalgradeawarded = $3
+WHERE student = $1;
 $$ LANGUAGE plpgsql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    RETURNS NULL ON NULL INPUT;
 
-ALTER FUNCTION assignFinalGrade(student INT, finalGradeAwarded VARCHAR(2))
+ALTER FUNCTION assignFinalGrade(student INT, sectionID INT,
+               finalGradeAwarded VARCHAR(2))
 OWNER TO CURRENT_USER;
 
-REVOKE ALL ON FUNCTION assignFinalGrade(student INT,
+REVOKE ALL ON FUNCTION assignFinalGrade(student INT, sectionID INT,
 finalGradeAwarded VARCHAR(2)) FROM PUBLIC;
 
-GRANT EXECUTE ON FUNCTION assignFinalGrade(student INT,
+GRANT EXECUTE ON FUNCTION assignFinalGrade(student INT, sectionID INT,
 finalGradeAwarded VARCHAR(2)) TO alpha_GB_Instructor, alpha_GB_DBAdmin;
 
 
