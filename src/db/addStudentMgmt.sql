@@ -310,16 +310,14 @@ RETURNS TABLE("FirstName" VARCHAR(50),
              )
 AS
 $$
-
 SELECT COALESCE(s.fname, ''),
        COALESCE(s.mname, ''), 
        COALESCE(s.lname, ''), 
        schoolissuedid, email, year
 FROM student s
-WHERE TRIM(COALESCE(s.fname)) ILIKE TRIM($1) AND
-      TRIM(COALESCE(s.mname)) ILIKE TRIM($2) AND
-      TRIM(COALESCE(s.lname)) ILIKE TRIM($3);
-
+WHERE TRIM(COALESCE(s.fname, '')) ILIKE TRIM($1) AND
+      TRIM(COALESCE(s.mname, '')) ILIKE TRIM($2) AND
+      TRIM(COALESCE(s.lname, '')) ILIKE TRIM($3);
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -361,11 +359,9 @@ CREATE OR REPLACE FUNCTION getStudentIDByIssuedID(schoolIssuedID VARCHAR(50))
 RETURNS INT
 AS
 $$
-
 SELECT s.id
 FROM student s
 WHERE TRIM(s.schoolissuediD) ILIKE TRIM($1);
-
 $$ LANGUAGE sql
 
    SECURITY DEFINER
@@ -390,11 +386,9 @@ alpha_GB_Admissions, alpha_GB_DBAdmin;
 CREATE OR REPLACE FUNCTION getStudentIDbyEmail(email VARCHAR(319))
 RETURNS INT AS
 $$
-
 SELECT s.id
 FROM student s
 WHERE TRIM(s.email) ILIKE TRIM($1);
-
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -421,7 +415,7 @@ CREATE OR REPLACE FUNCTION assignMidtermGrade(student INT,
 RETURNS VOID
 AS
 $$
-WITH T AS (
+WITH Temp_CTE AS (
    SELECT midtermgradeawarded, s.id FROM enrollee e JOIN section s ON e.section = s.id
    JOIN instructor i ON s.instructor1 = i.id OR s.instructor2 = i.id 
    OR s.instructor3 = i.id
@@ -429,7 +423,7 @@ WITH T AS (
 )
 UPDATE enrollee
 SET midtermgradeawarded = $2
-FROM T
+FROM Temp_CTE
 WHERE id = $1;
 $$ LANGUAGE sql
    SECURITY DEFINER
@@ -455,7 +449,7 @@ CREATE OR REPLACE FUNCTION assignFinalGrade(student INT,
 RETURNS VOID
 AS
 $$
-WITH T AS (
+WITH Temp_CTE AS (
    SELECT finalgradeawarded, s.id FROM enrollee e JOIN section s ON e.section = s.id
    JOIN instructor i ON s.instructor1 = i.id OR s.instructor2 = i.id 
    OR s.instructor3 = i.id
@@ -463,7 +457,7 @@ WITH T AS (
 )
 UPDATE enrollee
 SET finalgradeawarded = $2
-FROM T
+FROM Temp_CTE
 WHERE id = $1;
 $$ LANGUAGE sql
    SECURITY DEFINER
