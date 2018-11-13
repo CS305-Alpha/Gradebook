@@ -38,7 +38,6 @@ RETURNS TABLE
 )
 AS
 $$
-
    SELECT "Order", Name, Code
    FROM Season
    WHERE CASE
@@ -46,7 +45,6 @@ $$
             WHEN LENGTH($1) = 1 THEN Code = UPPER($1)
             ELSE LOWER(TRIM(Name)) = LOWER(TRIM($1))
          END;
-
 $$ LANGUAGE sql
    SECURITY DEFINER
 SET search_path FROM CURRENT
@@ -73,11 +71,9 @@ RETURNS TABLE
 )
 AS
 $$
-
    SELECT "Order", Name, Code
    FROM Season
    WHERE "Order" = $1;
-
 $$ LANGUAGE sql
    SECURITY DEFINER
 SET search_path FROM CURRENT
@@ -99,10 +95,8 @@ CREATE FUNCTION getSeasonOrder(seasonIdentification VARCHAR(20))
 RETURNS NUMERIC(1,0)
 AS
 $$
-
    SELECT "Order"
    FROM getSeason($1);
-
 $$ LANGUAGE sql
    SECURITY DEFINER
 SET search_path FROM CURRENT
