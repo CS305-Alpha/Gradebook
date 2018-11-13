@@ -38,7 +38,6 @@ RETURNS TABLE
 )
 AS
 $$
-
    SELECT "Order", Name, Code
    FROM Season
    WHERE CASE
@@ -46,12 +45,18 @@ $$
             WHEN LENGTH($1) = 1 THEN Code = UPPER($1)
             ELSE LOWER(TRIM(Name)) = LOWER(TRIM($1))
          END;
-
 $$ LANGUAGE sql
+   SECURITY DEFINER
+SET search_path FROM CURRENT
    STABLE
    RETURNS NULL ON NULL INPUT
    ROWS 1;
 
+REVOKE ALL ON FUNCTION getSeason(VARCHAR(20)) FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION getSeason(VARCHAR(20)) 
+TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
+alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 --Function to get the details of the season matching a season order
 -- this function exists to support clients that pass season order as a number
@@ -66,16 +71,21 @@ RETURNS TABLE
 )
 AS
 $$
-
    SELECT "Order", Name, Code
    FROM Season
    WHERE "Order" = $1;
-
 $$ LANGUAGE sql
+   SECURITY DEFINER
+SET search_path FROM CURRENT
    STABLE
    RETURNS NULL ON NULL INPUT
    ROWS 1;
 
+REVOKE ALL ON FUNCTION getSeason(NUMERIC(1,0)) FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION getSeason(NUMERIC(1,0)) 
+TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
+alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Function to get the "order" of the season matching a "season identification"
@@ -85,13 +95,19 @@ CREATE FUNCTION getSeasonOrder(seasonIdentification VARCHAR(20))
 RETURNS NUMERIC(1,0)
 AS
 $$
-
    SELECT "Order"
    FROM getSeason($1);
-
 $$ LANGUAGE sql
+   SECURITY DEFINER
+SET search_path FROM CURRENT
    STABLE
    RETURNS NULL ON NULL INPUT;
+
+REVOKE ALL ON FUNCTION getSeasonOrder(VARCHAR(20)) FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION getSeasonOrder(VARCHAR(20)) 
+TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
+alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
    --Returns a table listing season names and codes from the Season table.
    CREATE OR REPLACE FUNCTION listSeasons()
