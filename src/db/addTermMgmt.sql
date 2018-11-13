@@ -329,10 +329,10 @@ CREATE OR REPLACE FUNCTION getTermStudentCount(termID INT)
 RETURNS INT
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+SELECT COUNT(SELECT DISTINCT e.student 
+FROM enrollee e JOIN section s ON e.section = s.id
+WHERE s.term = $1);
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
