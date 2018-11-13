@@ -360,5 +360,40 @@ REVOKE ALL ON Enrollee_AssessmentItem FROM PUBLIC;
 GRANT ALL ON Enrollee_AssessmentItem TO alpha_GB_DBAdmin;
 
 
+--Create function for INSERT and UPDATE triggers that check to see if
+-- schoolIssuedID provided is unique among all users.
+CREATE OR REPLACE FUNCTION checkUniqueSchoolID() RETURNS TRIGGER AS
+$$
+BEGIN
+   IF EXISTS (SELECT * FROM Student S WHERE S.SchoolIssuedID
+                                         ILIKE NEW.SchoolIssuedID)
+      OR EXISTS (SELECT * FROM Instructor I WHERE I.SchoolIssuedID 
+                                               ILIKE NEW.SchoolIssuedID)
+   THEN
+      IF (TG_OP <> 'UPDATE' OR OLD.SchoolIssuedID <> NEW.SchoolIssuedID) THEN
+      RAISE EXCEPTION 'SchoolIssuedID ''%'' is already assigned', TG_ARGV[0];
+      END IF;
+   END IF;
+END;
+$$
+   LANGUAGE plpgsql
+   SECURITY DEFINER
+   SET search_path FROM CURRENT;
+
+
+CREATE TRIGGER triggerSchoolIDUniquenessInsertIns BEFORE INSERT ON Instructor
+EXECUTE PROCEDURE checkUniqueSchoolID();
+
+CREATE TRIGGER triggerSchoolIDUniquenessInsertStu BEFORE INSERT ON Student
+EXECUTE PROCEDURE checkUniqueSchoolID();
+
+CREATE TRIGGER triggerSchoolIDUniquenessUpdateIns
+BEFORE UPDATE OF SchoolIssuedID ON Instructor
+EXECUTE PROCEDURE checkUniqueSchoolID();
+
+CREATE TRIGGER triggerSchoolIDUniquenessUpdateStu
+BEFORE UPDATE OF SchoolIssuedID ON Student
+EXECUTE PROCEDURE checkUniqueSchoolID();
+
 
 COMMIT;
