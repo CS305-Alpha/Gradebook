@@ -114,7 +114,9 @@ CREATE TABLE Instructor
    SchoolIssuedID VARCHAR(50) NOT NULL UNIQUE, --cannot match any other schoolIssuedID
    Department VARCHAR(30),
    Email VARCHAR(319) CHECK(TRIM(Email) LIKE '_%@_%._%'),
-   UNIQUE(FName, MName, LName)
+   UNIQUE(FName, MName, LName),
+
+   CONSTRAINT instructor_SchoolID_ValidChars CHECK(isValidSQLID(SchoolIssuedID))
 );
 
 --enforce case-insensitive uniqueness of instructor e-mail addresses
@@ -212,7 +214,9 @@ CREATE TABLE Student
    Email VARCHAR(319) CHECK(TRIM(Email) LIKE '_%@_%._%'),
    Year VARCHAR(30), --represents the student year. Ex: Freshman, Sophomore, Junior, Senior
    CONSTRAINT StudentNameRequired --ensure at least one of the name fields is used
-      CHECK (FName IS NOT NULL OR MName IS NOT NULL OR LName IS NOT NULL)
+      CHECK (FName IS NOT NULL OR MName IS NOT NULL OR LName IS NOT NULL),
+
+   CONSTRAINT instructor_SchoolID_ValidChars CHECK(isValidSQLID(SchoolIssuedID))
 );
 
 --enforce case-insensitive uniqueness of student e-mail addresses
@@ -355,6 +359,41 @@ ALTER TABLE Enrollee_AssessmentItem OWNER TO CURRENT_USER;
 REVOKE ALL ON Enrollee_AssessmentItem FROM PUBLIC;
 GRANT ALL ON Enrollee_AssessmentItem TO alpha_GB_DBAdmin;
 
+
+--Create function for INSERT and UPDATE triggers that check to see if
+-- schoolIssuedID provided is unique among all users.
+CREATE OR REPLACE FUNCTION checkUniqueSchoolID() RETURNS TRIGGER AS
+$$
+BEGIN
+   IF EXISTS (SELECT * FROM Student S WHERE S.SchoolIssuedID
+                                         ILIKE NEW.SchoolIssuedID)
+      OR EXISTS (SELECT * FROM Instructor I WHERE I.SchoolIssuedID 
+                                               ILIKE NEW.SchoolIssuedID)
+   THEN
+      IF (TG_OP <> 'UPDATE' OR OLD.SchoolIssuedID <> NEW.SchoolIssuedID) THEN
+      RAISE EXCEPTION 'SchoolIssuedID ''%'' is already assigned', TG_ARGV[0];
+      END IF;
+   END IF;
+END;
+$$
+   LANGUAGE plpgsql
+   SECURITY DEFINER
+   SET search_path FROM CURRENT;
+
+
+CREATE TRIGGER triggerSchoolIDUniquenessInsertIns BEFORE INSERT ON Instructor
+EXECUTE PROCEDURE checkUniqueSchoolID();
+
+CREATE TRIGGER triggerSchoolIDUniquenessInsertStu BEFORE INSERT ON Student
+EXECUTE PROCEDURE checkUniqueSchoolID();
+
+CREATE TRIGGER triggerSchoolIDUniquenessUpdateIns
+BEFORE UPDATE OF SchoolIssuedID ON Instructor
+EXECUTE PROCEDURE checkUniqueSchoolID();
+
+CREATE TRIGGER triggerSchoolIDUniquenessUpdateStu
+BEFORE UPDATE OF SchoolIssuedID ON Student
+EXECUTE PROCEDURE checkUniqueSchoolID();
 
 
 COMMIT;
