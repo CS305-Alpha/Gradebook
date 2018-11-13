@@ -123,10 +123,10 @@ CREATE OR REPLACE FUNCTION getTermEnd(termID INT)
 RETURNS DATE
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+    SELECT EndDate 
+    FROM Term
+    WHERE ID = $1;
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
