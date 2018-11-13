@@ -117,10 +117,9 @@ alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
                  )
    AS
    $$
-   BEGIN
-      RAISE WARNING 'Function not implemented';
-   END
-   $$ LANGUAGE plpgsql
+  SELECT name, code
+  FROM season;
+   $$ LANGUAGE sql
       SECURITY DEFINER
    SET search_path FROM CURRENT
       STABLE;
