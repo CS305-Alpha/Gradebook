@@ -316,9 +316,9 @@ SELECT COALESCE(s.fname, ''),
        COALESCE(s.lname, ''), 
        schoolissuedid, email, year
 FROM student s
-WHERE LOWER(TRIM(COALESCE(s.fname))) LIKE LOWER(TRIM($1)) AND
-      LOWER(TRIM(COALESCE(s.mname))) LIKE LOWER(TRIM($2)) AND
-      LOWER(TRIM(COALESCE(s.lname))) like LOWER(TRIM($3));
+WHERE TRIM(COALESCE(s.fname)) ILIKE TRIM($1) AND
+      TRIM(COALESCE(s.mname)) ILIKE TRIM($2) AND
+      TRIM(COALESCE(s.lname)) ILIKE TRIM($3);
 
 $$ LANGUAGE sql
    SECURITY DEFINER
@@ -364,7 +364,7 @@ $$
 
 SELECT s.id
 FROM student s
-WHERE LOWER(TRIM(s.schoolissuediD)) LIKE LOWER(TRIM($1));
+WHERE TRIM(s.schoolissuediD) ILIKE TRIM($1);
 
 $$ LANGUAGE sql
 
@@ -393,7 +393,7 @@ $$
 
 SELECT s.id
 FROM student s
-WHERE LOWER(TRIM(s.email)) LIKE LOWER(TRIM($1));
+WHERE TRIM(s.email) ILIKE TRIM($1);
 
 $$ LANGUAGE sql
    SECURITY DEFINER
