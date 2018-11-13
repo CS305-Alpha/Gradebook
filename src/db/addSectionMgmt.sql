@@ -281,13 +281,16 @@ RETURNS TABLE(Number VARCHAR(8),
             Difference INTEGER)
 AS
 $$
-SELECT CASE 
-   WHEN c.title = $2
-   THEN number, title, 0
-   ELSE number, title, 1
+
+SELECT number, title, 
+   CASE WHEN title = $2
+      THEN 0
+      ELSE 1
+   END
 FROM term t JOIN section s ON t.id = s.term
 JOIN course c on s.course LIKE c.number
-WHERE t.id = $1 AND c.title ILIKE '%' || $2 || '%';
+WHERE t.id = $1 AND s.title ILIKE '%' || $2 || '%';
+
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
