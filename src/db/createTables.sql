@@ -114,7 +114,9 @@ CREATE TABLE Instructor
    SchoolIssuedID VARCHAR(50) NOT NULL UNIQUE, --cannot match any other schoolIssuedID
    Department VARCHAR(30),
    Email VARCHAR(319) CHECK(TRIM(Email) LIKE '_%@_%._%'),
-   UNIQUE(FName, MName, LName)
+   UNIQUE(FName, MName, LName),
+
+   CONSTRAINT instructor_SchoolID_ValidChars CHECK(isValidSQLID(SchoolIssuedID))
 );
 
 --enforce case-insensitive uniqueness of instructor e-mail addresses
@@ -212,7 +214,9 @@ CREATE TABLE Student
    Email VARCHAR(319) CHECK(TRIM(Email) LIKE '_%@_%._%'),
    Year VARCHAR(30), --represents the student year. Ex: Freshman, Sophomore, Junior, Senior
    CONSTRAINT StudentNameRequired --ensure at least one of the name fields is used
-      CHECK (FName IS NOT NULL OR MName IS NOT NULL OR LName IS NOT NULL)
+      CHECK (FName IS NOT NULL OR MName IS NOT NULL OR LName IS NOT NULL),
+
+   CONSTRAINT instructor_SchoolID_ValidChars CHECK(isValidSQLID(SchoolIssuedID))
 );
 
 --enforce case-insensitive uniqueness of student e-mail addresses
