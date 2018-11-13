@@ -196,7 +196,7 @@ CREATE OR REPLACE FUNCTION getTermSectionCount(termID INT)
 RETURNS INT
 AS
 $$
-    SELECT COUNT(DISTINCT Section)
+    SELECT COUNT(Section)
     FROM Section
     WHERE Term = $1;
 $$ LANGUAGE sql
