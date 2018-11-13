@@ -421,10 +421,17 @@ CREATE OR REPLACE FUNCTION assignMidtermGrade(student INT,
 RETURNS VOID
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+WITH T AS (
+   SELECT midtermgradeawarded, s.id FROM enrollee e JOIN section s ON e.section = s.id
+   JOIN instructor i ON s.instructor1 = i.id OR s.instructor2 = i.id 
+   OR s.instructor3 = i.id
+   WHERE i.schoolissuedid ILIKE current_user
+)
+UPDATE enrollee
+SET midtermgradeawarded = $2
+FROM T
+WHERE id = $1;
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    RETURNS NULL ON NULL INPUT;
@@ -448,10 +455,17 @@ CREATE OR REPLACE FUNCTION assignFinalGrade(student INT,
 RETURNS VOID
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+WITH T AS (
+   SELECT finalgradeawarded, s.id FROM enrollee e JOIN section s ON e.section = s.id
+   JOIN instructor i ON s.instructor1 = i.id OR s.instructor2 = i.id 
+   OR s.instructor3 = i.id
+   WHERE i.schoolissuedid ILIKE current_user
+)
+UPDATE enrollee
+SET finalgradeawarded = $2
+FROM T
+WHERE id = $1;
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    RETURNS NULL ON NULL INPUT;
