@@ -31,8 +31,19 @@ CREATE OR REPLACE FUNCTION changeCourseDefaultTitle(courseNumber VARCHAR(8),
 RETURNS VARCHAR(100)
 AS
 $$
+DECLARE 
+   oldTitle VARCHAR(100);
 BEGIN
-   RAISE WARNING 'Function not implemented';
+   -- Will most likely be replaced with an update in the future. 
+   INSERT INTO oldTitle (SELECT DefaultTitle FROM Course Where Number = courseNumber);
+
+   DELETE FROM Course
+   WHERE Number = $1;
+
+   INSERT INTO Course (Number, DefaultTitle)
+   VALUES ($1, $2);
+
+   RETURN oldTitle;
 END
 $$ LANGUAGE plpgsql
    SECURITY DEFINER
@@ -63,10 +74,10 @@ RETURNS TABLE(Number VARCHAR(8),
               Difference INTEGER)
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+   SELECT * 
+   FROM Course
+   WHERE DefaultTitle LIKE '%' || TRIM($1) || '%';
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
@@ -87,17 +98,23 @@ alpha_GB_Admissions, alpha_GB_DBAdmin;
 --“Calculus II”, or “Faculty Developed Study”). This default title may be later
 --used for sections, or a section of the course may use its own title. Exception
 --raised if course name (not default title) already corresponded to an existing
---course.
+--course. 
 CREATE OR REPLACE FUNCTION addCourse(name VARCHAR(8),
                                      defaultTitle VARCHAR(100)
                                     )
 RETURNS VOID
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+    IF NOT EXISTS 
+        SELECT * FROM Course
+        WHERE Number = $1;
+    THEN
+        RAISE EXCEPTION 'Current user is not an instructor of specified student'
+    ELSE
+        INSERT INTO Course (Number, DefaultTitle)
+        VALUES ($1, $2);
+
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT;
 
