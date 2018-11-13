@@ -42,14 +42,12 @@ CREATE FUNCTION getSectionID(year NUMERIC(4,0),
 RETURNS INT
 AS
 $$
-
    SELECT N.ID
    FROM Section N JOIN Term T ON N.Term  = T.ID
    WHERE T.Year = $1
          AND T.Season = getSeasonOrder($2)
-         AND LOWER(N.Course) = LOWER($3)
-         AND LOWER(N.SectionNumber) = LOWER($4);
-
+         AND N.Course ILIKE $3
+         AND N.SectionNumber ILIKE $4;
 $$ LANGUAGE sql
    STABLE
    RETURNS NULL ON NULL INPUT;
@@ -71,9 +69,7 @@ CREATE FUNCTION getSectionID(year NUMERIC(4,0),
 RETURNS INT
 AS
 $$
-
    SELECT getSectionID($1, $2::VARCHAR, $3, $4);
-
 $$ LANGUAGE sql
 STABLE
 RETURNS NULL ON NULL INPUT;
@@ -109,16 +105,14 @@ RETURNS TABLE
 )
 AS
 $$
-
    SELECT N.ID, N.Term, N.Course, N.SectionNumber, N.CRN, N.Schedule, N.Location,
          COALESCE(N.StartDate, T.StartDate), COALESCE(N.EndDate, T.EndDate),
          N.MidtermDate, N.Instructor1, N.Instructor2, N.Instructor3
    FROM Section N JOIN Term T ON N.Term  = T.ID
    WHERE T.Year = $1
          AND T.Season = getSeasonOrder($2)
-         AND LOWER(N.Course) = LOWER($3)
-         AND LOWER(N.SectionNumber) = LOWER($4);
-
+         AND N.Course ILIKE $3
+         AND N.SectionNumber ILIKE $4;
 $$ LANGUAGE sql
    STABLE
    RETURNS NULL ON NULL INPUT
@@ -154,126 +148,15 @@ Instructor3 INT
 )
 AS
 $$
-
    SELECT ID, Term, Course, SectionNumber, CRN, Schedule, Location,
          StartDate, EndDate,
          MidtermDate, Instructor1, Instructor2, Instructor3
    FROM getSection($1, $2::VARCHAR, $3, $4);
-
 $$ LANGUAGE sql
+STABLE
+RETURNS NULL ON NULL INPUT
+ROWS 1;
 
-  STABLE
-  RETURNS NULL ON NULL INPUT
-  ROWS 1;
-
-
-  --Returns the ID
-  --attribute of a row from the Section table where the row's term, course, and
-  --sectionNumber attributes match all of the arguments term, courseNumber, and
-  --sectionNumber, respectively.
-  CREATE OR REPLACE FUNCTION getSectionID(term INT,
-                                          courseNumber VARCHAR(8),
-                                          sectionNumber VARCHAR(3)
-                                         )
-  RETURNS INT
-  AS
-  $$
-  BEGIN
-     RAISE WARNING 'Function not implemented';
-  END
-  $$ LANGUAGE plpgsql
-     SECURITY DEFINER
-   SET search_path FROM CURRENT
-     STABLE
-     RETURNS NULL ON NULL INPUT;
-
-  ALTER FUNCTION getSectionID(term INT, courseNumber VARCHAR(8),
-  sectionNumber VARCHAR(3)) OWNER TO CURRENT_USER;
-
-  REVOKE ALL ON FUNCTION getSectionID(term INT, courseNumber VARCHAR(8),
-  sectionNumber VARCHAR(3)) FROM PUBLIC;
-
-  GRANT EXECUTE ON FUNCTION getSectionID(term INT, courseNumber VARCHAR(8),
-  sectionNumber VARCHAR(3)) TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student,
-  alpha_GB_Registrar, alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
-
-
-  --Returns the ID attribute of a row from the Section table where the row's
-  --term, course, and sectionNumber attributes match all of the arguments term,
-  --courseNumber, and sectionNumber, respectively.
-  CREATE OR REPLACE FUNCTION getSectionID(term INT, CRN VARCHAR(5))
-  RETURNS INT
-  AS
-  $$
-  BEGIN
-     RAISE WARNING 'Function not implemented';
-  END
-  $$ LANGUAGE plpgsql
-     SECURITY DEFINER
-   SET search_path FROM CURRENT
-     STABLE
-     RETURNS NULL ON NULL INPUT;
-
-  ALTER FUNCTION getSectionID(term INT, CRN VARCHAR(5)) OWNER TO CURRENT_USER;
-
-  REVOKE ALL ON FUNCTION getSectionID(term INT, CRN VARCHAR(5)) FROM PUBLIC;
-
-  GRANT EXECUTE ON FUNCTION getSectionID(term INT, CRN VARCHAR(5)) TO alpha_GB_Webapp,
-  alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-  alpha_GB_Admissions, alpha_GB_DBAdmin;
-
-
-  --Returns a table describing the section, which is populated with rows in
-  --which the ID attribute of Section matches the argument ID.
-  CREATE OR REPLACE FUNCTION getSection(sectionID INT)
-  RETURNS TABLE(Term INT,
-                Course VARCHAR(8),
-                SectionNumber VARCHAR(3),
-                CRN VARCHAR(5),
-                Schedule VARCHAR(7),
-                Location VARCHAR(25),
-                StartDate DATE,
-                EndDate DATE,
-                MidtermDate DATE,
-                Instructors VARCHAR(150)
-               )
-  AS
-  $$
-  BEGIN
-     RAISE WARNING 'Function not implemented';
-  END
-  $$ LANGUAGE plpgsql
-     SECURITY DEFINER
-   SET search_path FROM CURRENT
-     STABLE
-     RETURNS NULL ON NULL INPUT;
-
-  ALTER FUNCTION getSection(sectionID INT) OWNER TO CURRENT_USER;
-
-  REVOKE ALL ON FUNCTION getSection(sectionID INT) FROM PUBLIC;
-
-  GRANT EXECUTE ON FUNCTION getSection(sectionID INT) TO alpha_GB_Webapp, 
-  alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
-  alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
-
-
-  --Generates a list of class dates within a specified range. Uses char codes for
-  --days of the week (In order, starting with Sunday: NMTWRFS).
-  CREATE OR REPLACE FUNCTION getScheduleDates(startDate DATE,
-                                              endDate DATE,
-                                              schedule VARCHAR(7)
-                                             )
- RETURNS TABLE("Dates" DATE)
- AS
-  $$
-  BEGIN
-     RAISE WARNING 'Function not implemented';
-  END
-  $$ LANGUAGE plpgsql
-     SECURITY DEFINER
-   SET search_path FROM CURRENT
-     STABLE
-     RETURNS NULL ON NULL INPUT;
 
 --Returns the ID
 --attribute of a row from the Section table where the row's term, course, and
@@ -289,18 +172,26 @@ $$
 SELECT s.ID
 FROM Section s
 WHERE s.term = $1 AND
-      LOWER(s.course) LIKE LOWER($2) AND
-      LOWER(s.sectionNumber) LIKE LOWER($3);
+      s.course ILIKE $2 AND
+      s.sectionNumber ILIKE $3;
 $$ LANGUAGE sql
    SECURITY DEFINER
 SET search_path FROM CURRENT
    STABLE
    RETURNS NULL ON NULL INPUT;
 
+  ALTER FUNCTION getSectionID(term INT, courseNumber VARCHAR(8),
+  sectionNumber VARCHAR(3)) OWNER TO CURRENT_USER;
 
-  GRANT EXECUTE ON FUNCTION getScheduleDates(startDate DATE, endDate DATE,
-  schedule VARCHAR(7)) TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, 
+  REVOKE ALL ON FUNCTION getSectionID(term INT, courseNumber VARCHAR(8),
+  sectionNumber VARCHAR(3)) FROM PUBLIC;
+
+  GRANT EXECUTE ON FUNCTION getSectionID(term INT, courseNumber VARCHAR(8),
+  sectionNumber VARCHAR(3)) TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student,
   alpha_GB_Registrar, alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+
+ALTER FUNCTION getSectionID(term INT, courseNumber VARCHAR(8),
+sectionNumber VARCHAR(3)) OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION getSectionID(term INT, courseNumber VARCHAR(8),
 sectionNumber VARCHAR(3)) FROM PUBLIC;
@@ -317,12 +208,10 @@ CREATE OR REPLACE FUNCTION getSectionID(term INT, CRN VARCHAR(5))
 RETURNS INT
 AS
 $$
-
 SELECT s.ID
 FROM Section s
 WHERE s.term = $1 AND
-   LOWER(s.crn) LIKE LOWER($2);
-
+   s.crn ILIKE $2;
 $$ LANGUAGE sql
    SECURITY DEFINER
 SET search_path FROM CURRENT
@@ -354,7 +243,6 @@ RETURNS TABLE(Term INT,
             )
 AS
 $$
-
 SELECT s.term, s.course, s.sectionnumber, s.crn, s.schedule, s.location,
 s.startdate, s.enddate, s.midtermdate,
    COALESCE(getInstructorName(s.instructor1),'') ||
@@ -362,7 +250,6 @@ s.startdate, s.enddate, s.midtermdate,
    COALESCE(', ' || getInstructorName(s.instructor3),'')
 FROM section s
 WHERE s.id = $1;
-
 $$ LANGUAGE sql
    SECURITY DEFINER
 SET search_path FROM CURRENT
@@ -392,15 +279,14 @@ RETURNS TABLE(Number VARCHAR(8),
             Difference INTEGER)
 AS
 $$
-
-SELECT CASE 
-   WHEN c.title = $2
-   THEN number, title, 0
-   ELSE number, title, 1
+SELECT number, title, 
+   CASE WHEN title = $2
+      THEN 0
+      ELSE 1
+   END
 FROM term t JOIN section s ON t.id = s.term
 JOIN course c on s.course LIKE c.number
-WHERE t.id = $1 AND c.title ILIKE '%' || $2 || '%';
-
+WHERE t.id = $1 AND s.title ILIKE '%' || $2 || '%';
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT

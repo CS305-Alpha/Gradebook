@@ -117,10 +117,9 @@ CREATE OR REPLACE FUNCTION getCourseDefaultTitle(courseNumber VARCHAR(8))
 RETURNS VARCHAR(100)
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+SELECT title FROM course c
+WHERE c.title ILIKE '%' || $1 || '%';
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
