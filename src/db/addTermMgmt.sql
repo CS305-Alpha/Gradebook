@@ -230,9 +230,8 @@ CREATE OR REPLACE FUNCTION getTermInstructorCount(termID INT)
 RETURNS INT
 AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
+   SELECT COUNT(*) 
+   FROM (SELECT DISTINCT Instructor1, Instructor2, Instructor3 FROM Section);
 $$ LANGUAGE plpgsql
    SECURITY DEFINER
    SET search_path FROM CURRENT
