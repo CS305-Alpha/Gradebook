@@ -21,6 +21,7 @@ SET LOCAL client_min_messages TO WARNING;
 -- last for security purposes
 SET LOCAL search_path TO 'alpha', 'pg_temp';
 
+
 --Adds a date for a holiday, closure, or other notable event. Term references
 --the PK of a Term entity. Date is the date of the event. Name is the name of
 --the event (such as “Memorial Day” or “Snow Day”), classesHeld represents a
@@ -34,8 +35,7 @@ CREATE OR REPLACE FUNCTION addSignificantDate(term INT,
                                               classesHeld BOOLEAN,
                                               reason VARCHAR(30)
                                              )
-RETURNS VOID
-AS
+   RETURNS VOID AS
 $$
 BEGIN
    IF ($2 < getTermStart(term) OR $2 > getTermEnd(term)) THEN
@@ -71,8 +71,7 @@ GRANT EXECUTE ON FUNCTION addSignificantDate(term INT, date DATE,
 CREATE OR REPLACE FUNCTION getTermID(year NUMERIC(4,0),
                                      season CHAR(1)
                                     )
-RETURNS INT
-AS
+   RETURNS INT AS
 $$
    SELECT ID 
    FROM Term
@@ -85,20 +84,19 @@ $$ LANGUAGE sql
    RETURNS NULL ON NULL INPUT;
 
 ALTER FUNCTION getTermID(year NUMERIC(4,0), season CHAR(1))
-OWNER TO CURRENT_USER;
+   OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION getTermID(year NUMERIC(4,0), season CHAR(1)) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getTermID(year NUMERIC(4,0), season CHAR(1))
-TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
-alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns the start date of a row from the Term table which matches the given
 --termID. Returns NULL if termID does not refer to a known Term.
 CREATE OR REPLACE FUNCTION getTermStart(termID INT)
-RETURNS DATE
-AS
+   RETURNS DATE AS
 $$
     SELECT StartDate 
     FROM Term
@@ -113,16 +111,14 @@ ALTER FUNCTION getTermStart(termID INT) OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION getTermStart(termID INT) FROM PUBLIC;
 
-GRANT EXECUTE ON FUNCTION getTermStart(termID INT) TO alpha_GB_Webapp, 
-alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+GRANT EXECUTE ON FUNCTION getTermStart(termID INT) TO alpha_GB_Webapp,
+   alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns the end date of a row from the Term table which matches the given
 --termID. Returns NULL if termID does not refer to a known Term.
-CREATE OR REPLACE FUNCTION getTermEnd(termID INT)
-RETURNS DATE
-AS
+CREATE OR REPLACE FUNCTION getTermEnd(termID INT) RETURNS DATE AS
 $$
     SELECT EndDate 
     FROM Term
@@ -137,9 +133,9 @@ ALTER FUNCTION getTermEnd(termID INT) OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION getTermEnd(termID INT) FROM PUBLIC;
 
-GRANT EXECUTE ON FUNCTION getTermEnd(termID INT) TO alpha_GB_Webapp, 
-alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+GRANT EXECUTE ON FUNCTION getTermEnd(termID INT) TO alpha_GB_Webapp,
+   alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns rows from the SignificantDate table which have a matching TermID.
@@ -150,8 +146,7 @@ RETURNS TABLE (Date DATE,
                Name VARCHAR(30),
                ClosureStatus CHAR(1),
                Reason VARCHAR(30)
-              )
-AS
+              ) AS
 $$
     SELECT *
     FROM SignificantDate
@@ -167,17 +162,15 @@ ALTER FUNCTION getSignificantDates(termID INT) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION getSignificantDates(termID INT) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getSignificantDates(termID INT) TO alpha_GB_Webapp,
-alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+   alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns the total count of courses which occur in a given term. Returns a
 --count of rows in the Section table where the row's Term attribute matches the
 --argument termID, and where Course is distinct. Returns 0 if no courses are
 --offered in the Term and NULL if termID does not refer to a known Term.
-CREATE OR REPLACE FUNCTION getTermCourseCount(termID INT)
-RETURNS INT
-AS
+CREATE OR REPLACE FUNCTION getTermCourseCount(termID INT) RETURNS INT AS
 $$
     SELECT COUNT(DISTINCT Course)
     FROM Section
@@ -193,17 +186,15 @@ ALTER FUNCTION getTermCourseCount(termID INT) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION getTermCourseCount(termID INT) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getTermCourseCount(termID INT) TO alpha_GB_Webapp,
-alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+   alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns the total count of sections which occur during a given term. Counts
 --the number of rows in the Section table where the row's Term attribute matches
 --the argument termID, and where Section is distinct. Returns 0 if no sections
 --are offered in the Term and NULL if termID does not refer to a known Term.
-CREATE OR REPLACE FUNCTION getTermSectionCount(termID INT)
-RETURNS INT
-AS
+CREATE OR REPLACE FUNCTION getTermSectionCount(termID INT) RETURNS INT AS
 $$
     SELECT COUNT(Section)
     FROM Section
@@ -219,16 +210,14 @@ ALTER FUNCTION getTermSectionCount(termID INT) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION getTermSectionCount(termID INT) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getTermSectionCount(termID INT) TO alpha_GB_Webapp,
-alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+   alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns the total count of instructors teaching during a given term. Returns 0
 --if no instructors are teaching in the term and NULL if termID does not refer
 --to a known Term.
-CREATE OR REPLACE FUNCTION getTermInstructorCount(termID INT)
-RETURNS INT
-AS
+CREATE OR REPLACE FUNCTION getTermInstructorCount(termID INT) RETURNS INT AS
 $$
    SELECT COUNT(*) 
    FROM (SELECT DISTINCT Instructor1, Instructor2, Instructor3 FROM Section);
@@ -243,8 +232,8 @@ ALTER FUNCTION getTermInstructorCount(termID INT) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION getTermInstructorCount(termID INT) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getTermInstructorCount(termID INT) TO alpha_GB_Webapp,
-alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+   alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns a table matching rows in the Section table, which has a schema similar
@@ -262,8 +251,7 @@ RETURNS TABLE (Course VARCHAR(8),
                EndDate DATE,
                MidtermDate DATE,
                Instructors VARCHAR
-              )
-AS
+              ) AS
 $$
 BEGIN
    RAISE WARNING 'Function not implemented';
@@ -279,8 +267,8 @@ ALTER FUNCTION getTermSectionsReport(termID INT) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION getTermSectionsReport(termID INT) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getTermSectionsReport(termID INT) TO alpha_GB_Webapp,
-alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+   alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns a table matching the schema of a Section table, containing rows which
@@ -301,14 +289,13 @@ RETURNS TABLE (ID INT,
                Instructor1 INT,
                Instructor2 INT,
                Instructor3 INT
-              )
-AS
+              ) AS
 $$
-SELECT id, term, course, sectionnumber, CRN, schedule, location, startdate,
-    enddate, midtermdate, getInstructorName(instructor1), 
-    getInstructorName(instructor2), getInstructorName(instructor3)
-FROM section
-WHERE term = $1;
+   SELECT id, term, course, sectionnumber, CRN, schedule, location, startdate,
+      enddate, midtermdate, getInstructorName(instructor1), 
+      getInstructorName(instructor2), getInstructorName(instructor3)
+   FROM section
+   WHERE term = $1;
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -320,20 +307,18 @@ ALTER FUNCTION getTermSections(termID INT) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION getTermSections(termID INT) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getTermSections(termID INT) TO alpha_GB_Webapp,
-alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+   alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns the total count of students which are taking a class in a given term.
 --Returns 0 if no students are enrolled in the term and NULL if termID does not
 --refer to a known Term.
-CREATE OR REPLACE FUNCTION getTermStudentCount(termID INT)
-RETURNS INT
-AS
+CREATE OR REPLACE FUNCTION getTermStudentCount(termID INT) RETURNS INT AS
 $$
-SELECT COUNT(SELECT DISTINCT e.student 
-FROM enrollee e JOIN section s ON e.section = s.id
-WHERE s.term = $1);
+   SELECT COUNT(SELECT DISTINCT e.student 
+   FROM enrollee e JOIN section s ON e.section = s.id
+   WHERE s.term = $1);
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -345,8 +330,8 @@ ALTER FUNCTION getTermStudentCount(termID INT) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION getTermStudentCount(termID INT) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getTermStudentCount(termID INT) TO alpha_GB_Webapp,
-alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+   alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns a table of rows from the Course table. Without arguments, returns all
@@ -358,16 +343,14 @@ RETURNS TABLE(Number VARCHAR(8),
               InstructorFullName VARCHAR(100),
               StartDate DATE,
               EndDate DATE
-             )
-AS
+             ) AS
 $$
-SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
-                      COALESCE(', ' || getInstructorName(instructor2),' ') ||
-                      COALESCE(', ' || getInstructorName(instructor3))
-), startdate, EndDate
-FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
-SORT BY t.year;
-
+   SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
+                         COALESCE(', ' || getInstructorName(instructor2),' ') ||
+                         COALESCE(', ' || getInstructorName(instructor3))),
+                         startdate, EndDate
+   FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
+   SORT BY t.year;
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -379,8 +362,8 @@ ALTER FUNCTION showCoursesByYear() OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION showCoursesByYear() FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION showCoursesByYear() TO alpha_GB_Webapp,
-alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+   alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns a table of rows from the Course table. Without arguments, returns all
@@ -392,15 +375,14 @@ RETURNS TABLE(Number VARCHAR(8),
               InstructorFullName VARCHAR(100),
               StartDate DATE,
               EndDate DATE
-             )
-AS
+             ) AS
 $$
-SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
-                      COALESCE(', ' || getInstructorName(instructor2),' ') ||
-                      COALESCE(', ' || getInstructorName(instructor3))
-), startdate, EndDate
-FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
-WHERE t.year = $1;
+   SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
+                         COALESCE(', ' || getInstructorName(instructor2),' ') ||
+                         COALESCE(', ' || getInstructorName(instructor3))),
+                         startdate, EndDate
+   FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
+   WHERE t.year = $1;
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -412,8 +394,8 @@ ALTER FUNCTION showCoursesByYear(year NUMERIC(4,0)) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION showCoursesByYear(year NUMERIC(4,0)) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION showCoursesByYear(year NUMERIC(4,0)) TO alpha_GB_Webapp,
-alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+   alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns a table of rows from the Course table. Without arguments, returns all
@@ -425,15 +407,14 @@ RETURNS TABLE(Number VARCHAR(8),
               InstructorFullName VARCHAR(100),
               StartDate DATE,
               EndDate DATE
-             )
-AS
+             ) AS
 $$
-SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
-                      COALESCE(', ' || getInstructorName(instructor2),' ') ||
-                      COALESCE(', ' || getInstructorName(instructor3))
-), startdate, EndDate
-FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
-WHERE t.id = $1;
+   SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
+                         COALESCE(', ' || getInstructorName(instructor2),' ') ||
+                         COALESCE(', ' || getInstructorName(instructor3))),
+                         startdate, EndDate
+   FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
+   WHERE t.id = $1;
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -445,8 +426,8 @@ ALTER FUNCTION showCoursesByTerm(termID INT) OWNER TO CURRENT_USER;
 REVOKE ALL ON FUNCTION showCoursesByTerm(termID INT) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION showCoursesByTerm(termID INT) TO alpha_GB_Webapp,
-alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+   alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 COMMIT;
