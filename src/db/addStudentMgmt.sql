@@ -34,8 +34,7 @@ SET LOCAL search_path TO 'alpha', 'pg_temp';
 --has not been enrolled in a section, or if studentID does not match a valid
 --student.
 CREATE OR REPLACE FUNCTION getStudentYears(studentID INT)
-RETURNS TABLE(Year NUMERIC(4,0))
-AS
+   RETURNS TABLE(Year NUMERIC(4,0)) AS
 $$
    SELECT DISTINCT T.Year
    FROM Term T JOIN Section S ON T.ID = S.Term
@@ -62,8 +61,7 @@ GRANT EXECUTE ON FUNCTION getStudentYears(studentID INT) TO alpha_GB_Webapp,
 --student has not been enrolled in any sections, or NULL if the SESSION_USER is
 --not a student.
 CREATE OR REPLACE FUNCTION getYearsAsStudent()
-RETURNS TABLE(Year NUMERIC(4,0))
-AS
+   RETURNS TABLE(Year NUMERIC(4,0)) AS
 $$
    SELECT getStudentYears(getMyStudentID());
 $$ LANGUAGE sql
@@ -85,10 +83,9 @@ GRANT EXECUTE ON FUNCTION getYearsAsStudent() TO alpha_GB_Student;
 CREATE OR REPLACE FUNCTION getStudentSeasons(studentID INT,
                                              year NUMERIC(4,0)
                                             )
-RETURNS TABLE(SeasonOrder Numeric(1,0),
-              SeasonName VARCHAR(20)
-             )
-AS
+   RETURNS TABLE(SeasonOrder Numeric(1,0),
+               SeasonName VARCHAR(20)
+               ) AS
 $$
    SELECT DISTINCT S."Order", S.Name
    FROM Season S JOIN Term T ON S."Order" = T.Season
@@ -105,13 +102,12 @@ $$ LANGUAGE sql
 ALTER FUNCTION getStudentSeasons(studentID INT,
                                  year NUMERIC(4,0)
                                 )
-OWNER TO CURRENT_USER;
+   OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION getStudentSeasons(studentID INT, year NUMERIC(4,0))
    FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getStudentSeasons(studentID INT, year NUMERIC(4,0))
-
 TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
 alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
@@ -121,10 +117,9 @@ alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 --Returns 0 rows if student has not been enrolled in any sections, or NULL if
 --the SESSION_USER is not a student.
 CREATE OR REPLACE FUNCTION getSeasonsAsStudent(year NUMERIC(4,0))
-RETURNS TABLE(SeasonOrder Numeric(1,0),
-              SeasonName VARCHAR(20)
-             )
-AS
+   RETURNS TABLE(SeasonOrder Numeric(1,0),
+               SeasonName VARCHAR(20)
+               ) AS
 $$
    SELECT getStudentSeasons(getMyStudentID());
 $$ LANGUAGE sql
@@ -152,8 +147,7 @@ CREATE OR REPLACE FUNCTION addStudent(fName VARCHAR(50),
                                       email VARCHAR(319),
                                       year VARCHAR(30)
                                      )
-RETURNS VOID
-AS
+   RETURNS VOID AS
 $$
 BEGIN
    --May eventually integrate checks with helper functions
@@ -202,8 +196,7 @@ GRANT EXECUTE ON FUNCTION addStudent(fName VARCHAR(50), mName VARCHAR(50),
 CREATE OR REPLACE FUNCTION assignMajor(student INT,
                                        major VARCHAR(30)
                                       )
-RETURNS VOID
-AS
+   RETURNS VOID AS
 $$
 BEGIN
    IF NOT EXISTS(SELECT * FROM Student S WHERE S.ID = $1) THEN
@@ -253,8 +246,7 @@ GRANT EXECUTE ON FUNCTION assignMajor(student INT, major VARCHAR(30))
 CREATE OR REPLACE FUNCTION revokeMajor(student INT,
                                        major VARCHAR(30)
                                       )
-RETURNS VOID
-AS
+   RETURNS VOID AS
 $$
 BEGIN
    IF NOT EXISTS(SELECT * FROM Student S WHERE S.ID = $1) THEN
@@ -307,8 +299,7 @@ RETURNS TABLE("FirstName" VARCHAR(50),
               "SchoolID" VARCHAR(50),
               "Email" VARCHAR(319),
               "Year" VARCHAR(30)
-             )
-AS
+             ) AS
 $$
 SELECT COALESCE(s.fname, ''),
        COALESCE(s.mname, ''), 
@@ -325,14 +316,14 @@ $$ LANGUAGE sql
    RETURNS NULL ON NULL INPUT;
 
 ALTER FUNCTION searchStudent(fname VARCHAR(50), mName VARCHAR(50),
-lName VARCHAR(50)) OWNER TO CURRENT_USER;
+   lName VARCHAR(50)) OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION searchStudent(fname VARCHAR(50), mName VARCHAR(50),
-lName VARCHAR(50)) FROM PUBLIC;
+   lName VARCHAR(50)) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION searchStudent(fname VARCHAR(50), mName VARCHAR(50),
-lName VARCHAR(50)) TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
-alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+   lName VARCHAR(50)) TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns the ID for the row in the Student table where the row's schoolIssuedID
@@ -356,8 +347,7 @@ GRANT EXECUTE ON FUNCTION getMyStudentID() TO alpha_GB_Student;
 --attribute matches the argument schoolIssuedID, or where the row's email
 --attribute matches the argument email.
 CREATE OR REPLACE FUNCTION getStudentIDByIssuedID(schoolIssuedID VARCHAR(50))
-RETURNS INT
-AS
+   RETURNS INT AS
 $$
 SELECT s.id
 FROM student s
@@ -369,21 +359,21 @@ $$ LANGUAGE sql
    RETURNS NULL ON NULL INPUT;
 
 ALTER FUNCTION getStudentIDByIssuedID(schoolIssuedID VARCHAR(50))
-OWNER TO CURRENT_USER;
+   OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION getStudentIDByIssuedID(schoolIssuedID VARCHAR(50))
-FROM PUBLIC;
+   FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getStudentIDByIssuedID(schoolIssuedID VARCHAR(50))
-TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Returns the ID for the row in the Student table where the row's schoolIssuedID
 --attribute matches the argument schoolIssuedID, or where the row's email
 --attribute matches the argument email.
 CREATE OR REPLACE FUNCTION getStudentIDbyEmail(email VARCHAR(319))
-RETURNS INT AS
+   RETURNS INT AS
 $$
 SELECT s.id
 FROM student s
@@ -398,10 +388,9 @@ ALTER FUNCTION getStudentIDbyEmail(email VARCHAR(319)) OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION getStudentIDbyEmail(email VARCHAR(319)) FROM PUBLIC;
 
-GRANT EXECUTE ON FUNCTION getStudentIDbyEmail(email VARCHAR(319)) 
-
-TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
-alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+GRANT EXECUTE ON FUNCTION getStudentIDbyEmail(email VARCHAR(319))
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 
@@ -411,34 +400,32 @@ alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 CREATE OR REPLACE FUNCTION assignMidtermGrade(student INT, sectionID INT
                                               midtermGradeAwarded VARCHAR(2)
                                              )
-RETURNS VOID
-AS
+   RETURNS VOID AS
 $$
-IF NOT EXISTS 
-   SELECT * FROM section s
-   WHERE s.id = $2 AND getInstructorID(session_user) IN (
-      instructor1, instructor2, instructor3
-   )
+   IF NOT EXISTS 
+      SELECT * FROM section s
+      WHERE s.id = $2 AND getInstructorID(SESSION_USER)
+                           IN (instructor1, instructor2, instructor3)
    THEN
-   RAISE EXCEPTION 'Current user is not an instructor of specified student'
+      RAISE EXCEPTION 'Current user is not an instructor of specified student';
    ELSE
-UPDATE enrollee
-SET midtermgradeawarded = $3
-WHERE student = $1;
+      UPDATE enrollee
+      SET midtermgradeawarded = $3
+      WHERE student = $1;
 $$ LANGUAGE plpgsql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    RETURNS NULL ON NULL INPUT;
 
-ALTER FUNCTION assignMidtermGrade(student INT, sectionID INT, 
-               midtermGradeAwarded VARCHAR(2))
-OWNER TO CURRENT_USER;
+ALTER FUNCTION assignMidtermGrade(student INT, sectionID INT,
+                                  midtermGradeAwarded VARCHAR(2))
+   OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION assignMidtermGrade(student INT, sectionID INT,
-midtermGradeAwarded VARCHAR(2)) FROM PUBLIC;
+   midtermGradeAwarded VARCHAR(2)) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION assignMidtermGrade(student INT, sectionID INT,
-midtermGradeAwarded VARCHAR(2)) TO alpha_GB_Instructor, alpha_GB_DBAdmin;
+   midtermGradeAwarded VARCHAR(2)) TO alpha_GB_Instructor, alpha_GB_DBAdmin;
 
 
 --Changes finalGradeAwarded in a row of the Enrollee table where the row's
@@ -447,34 +434,32 @@ midtermGradeAwarded VARCHAR(2)) TO alpha_GB_Instructor, alpha_GB_DBAdmin;
 CREATE OR REPLACE FUNCTION assignFinalGrade(student INT, sectionID INT,
                                             finalGradeAwarded VARCHAR(2)
                                            )
-RETURNS VOID
-AS
+   RETURNS VOID AS
 $$
-IF NOT EXISTS 
-   SELECT * FROM section s
-   WHERE s.id = $2 AND getInstructorID(session_user) IN (
-      instructor1, instructor2, instructor3
-   )
+   IF NOT EXISTS
+      SELECT * FROM section s
+      WHERE s.id = $2 AND getInstructorID(SESSION_USER)
+                           IN (instructor1, instructor2, instructor3)
    THEN
-   RAISE EXCEPTION 'Current user is not an instructor of specified student'
+      RAISE EXCEPTION 'Current user is not an instructor of specified student';
    ELSE
-UPDATE enrollee
-SET finalgradeawarded = $3
-WHERE student = $1;
+      UPDATE enrollee
+      SET finalgradeawarded = $3
+      WHERE student = $1;
 $$ LANGUAGE plpgsql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    RETURNS NULL ON NULL INPUT;
 
 ALTER FUNCTION assignFinalGrade(student INT, sectionID INT,
-               finalGradeAwarded VARCHAR(2))
-OWNER TO CURRENT_USER;
+                                finalGradeAwarded VARCHAR(2))
+   OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION assignFinalGrade(student INT, sectionID INT,
-finalGradeAwarded VARCHAR(2)) FROM PUBLIC;
+   finalGradeAwarded VARCHAR(2)) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION assignFinalGrade(student INT, sectionID INT,
-finalGradeAwarded VARCHAR(2)) TO alpha_GB_Instructor, alpha_GB_DBAdmin;
+   finalGradeAwarded VARCHAR(2)) TO alpha_GB_Instructor, alpha_GB_DBAdmin;
 
 
 COMMIT;
