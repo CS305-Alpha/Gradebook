@@ -52,15 +52,13 @@ $$
 $$ LANGUAGE sql
    STABLE; --no need for RETURN NULL ON... because the function takes no input
 
-    ALTER FUNCTION getInstructors()
-    OWNER TO alpha;
+ALTER FUNCTION getInstructors() OWNER TO alpha;
 
-    REVOKE ALL ON FUNCTION getInstructors()
-    FROM PUBLIC;
+REVOKE ALL ON FUNCTION getInstructors() FROM PUBLIC;
 
-    GRANT EXECUTE ON FUNCTION getInstructors()
-    TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
-            alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+GRANT EXECUTE ON FUNCTION getInstructors()
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --function to get details of the instructor with the given e-mail address
@@ -89,15 +87,14 @@ $$ LANGUAGE sql
    RETURNS NULL ON NULL INPUT
    ROWS 1; --returns at most one row
 
-    ALTER FUNCTION getInstructor(Email alpha.Instructor.Email%TYPE)
-    OWNER TO alpha;
+ALTER FUNCTION getInstructor(Email alpha.Instructor.Email%TYPE) OWNER TO alpha;
 
-    REVOKE ALL ON FUNCTION getInstructor(Email alpha.Instructor.Email%TYPE)
-    FROM PUBLIC;
+REVOKE ALL ON FUNCTION getInstructor(Email alpha.Instructor.Email%TYPE)
+   FROM PUBLIC;
 
-    GRANT EXECUTE ON FUNCTION getInstructor(Email alpha.Instructor.Email%TYPE)
-    TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
-            alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+GRANT EXECUTE ON FUNCTION getInstructor(Email alpha.Instructor.Email%TYPE)
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --function to get details of the instructor with the given ID
@@ -124,15 +121,13 @@ $$ LANGUAGE sql
    RETURNS NULL ON NULL INPUT
    ROWS 1;
 
-    ALTER FUNCTION getInstructor(instructorID INT)
-    OWNER TO alpha;
+ALTER FUNCTION getInstructor(instructorID INT) OWNER TO alpha;
 
-    REVOKE ALL ON FUNCTION getInstructor(instructorID INT)
-    FROM PUBLIC;
+REVOKE ALL ON FUNCTION getInstructor(instructorID INT) FROM PUBLIC;
 
-    GRANT EXECUTE ON FUNCTION getInstructor(instructorID INT)
-    TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
-            alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+GRANT EXECUTE ON FUNCTION getInstructor(instructorID INT)
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --drop functions with older names due to names being revised
@@ -162,15 +157,13 @@ $$ LANGUAGE sql
    STABLE
    RETURNS NULL ON NULL INPUT;
 
-    ALTER FUNCTION getInstructorYears(instructorID INT)
-    OWNER TO alpha;
+ALTER FUNCTION getInstructorYears(instructorID INT) OWNER TO alpha;
 
-    REVOKE ALL ON FUNCTION getInstructorYears(instructorID INT)
-    FROM PUBLIC;
+REVOKE ALL ON FUNCTION getInstructorYears(instructorID INT) FROM PUBLIC;
 
-    GRANT EXECUTE ON FUNCTION getInstructorYears(instructorID INT)
-    TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
-            alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+GRANT EXECUTE ON FUNCTION getInstructorYears(instructorID INT)
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --function to get all seasons an instructor has taught in a specfied year
@@ -194,21 +187,21 @@ $$ LANGUAGE sql
    STABLE
    RETURNS NULL ON NULL INPUT;
 
-    ALTER FUNCTION getInstructorSeasons(instructorID INT,
-                                               year NUMERIC(4,0)
-                                              )
-    OWNER TO alpha;
+ALTER FUNCTION getInstructorSeasons(instructorID INT,
+                                    year NUMERIC(4,0)
+                                   )
+   OWNER TO alpha;
 
-    REVOKE ALL ON FUNCTION getInstructorSeasons(instructorID INT,
-                                               year NUMERIC(4,0)
-                                              )
-    FROM PUBLIC;
+REVOKE ALL ON FUNCTION getInstructorSeasons(instructorID INT,
+                                            year NUMERIC(4,0)
+                                            )
+   FROM PUBLIC;
 
-    GRANT EXECUTE ON FUNCTION getInstructorSeasons(instructorID INT,
+GRANT EXECUTE ON FUNCTION getInstructorSeasons(instructorID INT,
                                                year NUMERIC(4,0)
-                                              )
-    TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
-            alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+                                               )
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --function to get all courses an instructor has taught in a year-season combo
@@ -235,24 +228,24 @@ $$ LANGUAGE sql
    STABLE
    RETURNS NULL ON NULL INPUT;
 
-    ALTER FUNCTION getInstructorCourses(instructorID INT,
-                                               year NUMERIC(4,0),
-                                               seasonOrder NUMERIC(1,0)
-                                              )
-    OWNER TO alpha;
+ALTER FUNCTION getInstructorCourses(instructorID INT,
+                                    year NUMERIC(4,0),
+                                    seasonOrder NUMERIC(1,0)
+                                   )
+   OWNER TO alpha;
 
-    REVOKE ALL ON FUNCTION getInstructorCourses(instructorID INT,
-                                               year NUMERIC(4,0),
-                                               seasonOrder NUMERIC(1,0)
-                                              )
-    FROM PUBLIC;
+REVOKE ALL ON FUNCTION getInstructorCourses(instructorID INT,
+                                            year NUMERIC(4,0),
+                                            seasonOrder NUMERIC(1,0)
+                                            )
+   FROM PUBLIC;
 
-    GRANT EXECUTE ON FUNCTION getInstructorCourses(instructorID INT,
+GRANT EXECUTE ON FUNCTION getInstructorCourses(instructorID INT,
                                                year NUMERIC(4,0),
                                                seasonOrder NUMERIC(1,0)
                                               )
-    TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
-            alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --function to get the course-section combos an instructor has taught in a
@@ -289,24 +282,25 @@ $$ LANGUAGE sql
    STABLE
    RETURNS NULL ON NULL INPUT;
 
-    ALTER FUNCTION getInstructorSections(instructorID INT,
-                                                year NUMERIC(4,0),
-                                                seasonOrder NUMERIC(1,0)
-                                               )
-    OWNER TO alpha;
+ALTER FUNCTION getInstructorSections(instructorID INT,
+                                       year NUMERIC(4,0),
+                                       seasonOrder NUMERIC(1,0)
+                                          )
+   OWNER TO alpha;
 
-    REVOKE ALL ON FUNCTION getInstructorSections(instructorID INT,
-                                                year NUMERIC(4,0),
-                                                seasonOrder NUMERIC(1,0)
-                                               )
-    FROM PUBLIC;
+REVOKE ALL ON FUNCTION getInstructorSections(instructorID INT,
+                                             year NUMERIC(4,0),
+                                             seasonOrder NUMERIC(1,0)
+                                             )
+   FROM PUBLIC;
 
-    GRANT EXECUTE ON FUNCTION getInstructorSections(instructorID INT,
+GRANT EXECUTE ON FUNCTION getInstructorSections(instructorID INT,
                                                 year NUMERIC(4,0),
                                                 seasonOrder NUMERIC(1,0)
-                                               )
-    TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
-            alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+                                                )
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+
 
 --function to get the section number(s) of a course an instructor has taught
 -- performs case-insensitive match for course
@@ -333,27 +327,27 @@ $$ LANGUAGE sql
    RETURNS NULL ON NULL INPUT;
 
 
-    ALTER FUNCTION getInstructorSections(instructorID INT,
-                                                year NUMERIC(4,0),
-                                                seasonOrder NUMERIC(1,0),
-                                                courseNumber VARCHAR(8)
-                                               )
-    OWNER TO alpha;
+ALTER FUNCTION getInstructorSections(instructorID INT,
+                                          year NUMERIC(4,0),
+                                          seasonOrder NUMERIC(1,0),
+                                          courseNumber VARCHAR(8)
+                                          )
+   OWNER TO alpha;
 
-    REVOKE ALL ON FUNCTION getInstructorSections(instructorID INT,
-                                                year NUMERIC(4,0),
-                                                seasonOrder NUMERIC(1,0),
-                                                courseNumber VARCHAR(8)
-                                               )
-    FROM PUBLIC;
+REVOKE ALL ON FUNCTION getInstructorSections(instructorID INT,
+                                          year NUMERIC(4,0),
+                                          seasonOrder NUMERIC(1,0),
+                                          courseNumber VARCHAR(8)
+                                          )
+   FROM PUBLIC;
 
-    GRANT EXECUTE ON FUNCTION getInstructorSections(instructorID INT,
-                                                year NUMERIC(4,0),
-                                                seasonOrder NUMERIC(1,0),
-                                                courseNumber VARCHAR(8)
-                                               )
-    TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
-            alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+GRANT EXECUTE ON FUNCTION getInstructorSections(instructorID INT,
+                                          year NUMERIC(4,0),
+                                          seasonOrder NUMERIC(1,0),
+                                          courseNumber VARCHAR(8)
+                                          )
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
+      alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 --Returns the full name of an instructor given an instructor ID
 CREATE OR REPLACE FUNCTION getInstructorName(instructorID INT)
@@ -377,5 +371,6 @@ REVOKE ALL ON FUNCTION getInstructorName(instructorID INT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION getInstructorName(instructorID INT)
 TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
    alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+
 
 COMMIT;

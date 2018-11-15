@@ -26,10 +26,8 @@ SET LOCAL search_path TO 'alpha', 'pg_temp';
 --number. Returns the previous course title or NULL if the courseNumber did not
 --correspond to a known course.
 CREATE OR REPLACE FUNCTION changeCourseDefaultTitle(courseNumber VARCHAR(8),
-                                                    newDefaultTitle VARCHAR(100)
-                                                   )
-RETURNS VARCHAR(100)
-AS
+                                                    newDefaultTitle VARCHAR(100))
+   RETURNS VARCHAR(100) AS
 $$
 DECLARE 
    oldTitle VARCHAR(100);
@@ -51,17 +49,17 @@ $$ LANGUAGE plpgsql
    RETURNS NULL ON NULL INPUT;
 
 ALTER FUNCTION changeCourseDefaultTitle(courseNumber VARCHAR(8),
-newDefaultTitle VARCHAR(100)) OWNER TO CURRENT_USER;
+                                        newDefaultTitle VARCHAR(100))
+   OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION changeCourseDefaultTitle(courseNumber VARCHAR(8),
-                                                newDefaultTitle VARCHAR(100)
-                                               )
-FROM PUBLIC;
+                                                newDefaultTitle VARCHAR(100))
+   FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION changeCourseDefaultTitle(courseNumber VARCHAR(8),
-                                                   newDefaultTitle VARCHAR(100)
-                                                  )
-TO alpha_GB_RegistrarAdmin, alpha_GB_DBAdmin;
+                                                   newDefaultTitle VARCHAR(100))
+   TO alpha_GB_RegistrarAdmin, alpha_GB_DBAdmin;
+
 
 --Returns a table of rows from the course table where the argument matches or
 --closely matches course title, with an added attribute that represents the
@@ -69,12 +67,11 @@ TO alpha_GB_RegistrarAdmin, alpha_GB_DBAdmin;
 --of 0 represents an exact match). Uses fuzzy matching to make comparisons.
 --Returns no rows if no course titles reasonably match the argument.
 CREATE OR REPLACE FUNCTION searchCourseTitles(titleSearch VARCHAR(100))
-RETURNS TABLE(Number VARCHAR(8),
-              Title VARCHAR(100),
-              Difference INTEGER)
-AS
+   RETURNS TABLE(Number VARCHAR(8),
+                 Title VARCHAR(100),
+                 Difference INTEGER) AS
 $$
-   SELECT * 
+   SELECT *
    FROM Course
    WHERE DefaultTitle LIKE '%' || TRIM($1) || '%';
 $$ LANGUAGE sql
@@ -87,9 +84,9 @@ ALTER FUNCTION searchCourseTitles(title VARCHAR(100)) OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION searchCourseTitles(title VARCHAR(100)) FROM PUBLIC;
 
-GRANT EXECUTE ON FUNCTION searchCourseTitles(title VARCHAR(100)) TO alpha_GB_Webapp,
-alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, alpha_GB_RegistrarAdmin, 
-alpha_GB_Admissions, alpha_GB_DBAdmin;
+GRANT EXECUTE ON FUNCTION searchCourseTitles(title VARCHAR(100)) TO
+   alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Adds a course to the Course table. Name represents the abbreviated name of the
@@ -100,42 +97,38 @@ alpha_GB_Admissions, alpha_GB_DBAdmin;
 --raised if course name (not default title) already corresponded to an existing
 --course. 
 CREATE OR REPLACE FUNCTION addCourse(name VARCHAR(8),
-                                     defaultTitle VARCHAR(100)
-                                    )
-RETURNS VOID
-AS
+                                     defaultTitle VARCHAR(100))
+   RETURNS VOID AS
 $$
-    IF NOT EXISTS 
-        SELECT * FROM Course
-        WHERE Number = $1;
-    THEN
-        RAISE EXCEPTION 'Current user is not an instructor of specified student'
-    ELSE
-        INSERT INTO Course (Number, DefaultTitle)
-        VALUES ($1, $2);
-
+   IF NOT EXISTS
+      SELECT * FROM Course
+      WHERE Number = $1;
+   THEN
+      RAISE EXCEPTION 'Current user is not an instructor of specified student';
+   ELSE
+      INSERT INTO Course (Number, DefaultTitle)
+      VALUES ($1, $2);
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT;
 
 ALTER FUNCTION addCourse(name VARCHAR(8), defaultTitle VARCHAR(100))
-OWNER TO CURRENT_USER;
+   OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION addCourse(name VARCHAR(8), defaultTitle VARCHAR(100))
-FROM PUBLIC;
+   FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION addCourse(name VARCHAR(8), defaultTitle VARCHAR(100))
-TO alpha_GB_RegistrarAdmin, alpha_GB_DBAdmin;
+   TO alpha_GB_RegistrarAdmin, alpha_GB_DBAdmin;
 
 
 --Returns the default title of the Course corresponding to the given
 --courseNumber. Returns NULL if no course matches the argument.
 CREATE OR REPLACE FUNCTION getCourseDefaultTitle(courseNumber VARCHAR(8))
-RETURNS VARCHAR(100)
-AS
+   RETURNS VARCHAR(100) AS
 $$
-SELECT title FROM course c
-WHERE c.title ILIKE '%' || $1 || '%';
+   SELECT title FROM course c
+   WHERE c.title ILIKE '%' || $1 || '%';
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -143,14 +136,14 @@ $$ LANGUAGE sql
    RETURNS NULL ON NULL INPUT;
 
 ALTER FUNCTION getCourseDefaultTitle(courseNumber VARCHAR(8))
-OWNER TO CURRENT_USER;
+   OWNER TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION getCourseDefaultTitle(courseNumber VARCHAR(8))
-FROM PUBLIC;
+   FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getCourseDefaultTitle(courseNumber VARCHAR(8)) TO
-alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
-alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+   alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 COMMIT;

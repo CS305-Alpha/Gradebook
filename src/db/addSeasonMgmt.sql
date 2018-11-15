@@ -54,9 +54,9 @@ SET search_path FROM CURRENT
 
 REVOKE ALL ON FUNCTION getSeason(VARCHAR(20)) FROM PUBLIC;
 
-GRANT EXECUTE ON FUNCTION getSeason(VARCHAR(20)) 
-TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
-alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+GRANT EXECUTE ON FUNCTION getSeason(VARCHAR(20))
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 --Function to get the details of the season matching a season order
 -- this function exists to support clients that pass season order as a number
@@ -84,8 +84,8 @@ SET search_path FROM CURRENT
 REVOKE ALL ON FUNCTION getSeason(NUMERIC(1,0)) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getSeason(NUMERIC(1,0)) 
-TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
-alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
 --Function to get the "order" of the season matching a "season identification"
@@ -106,25 +106,24 @@ SET search_path FROM CURRENT
 REVOKE ALL ON FUNCTION getSeasonOrder(VARCHAR(20)) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getSeasonOrder(VARCHAR(20)) 
-TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
-alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Student, alpha_GB_Registrar, 
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
-   --Returns a table listing season names and codes from the Season table.
-   CREATE OR REPLACE FUNCTION listSeasons()
+--Returns a table listing season names and codes from the Season table.
+CREATE OR REPLACE FUNCTION listSeasons()
    RETURNS TABLE ("Order" NUMERIC(1,0),
                   Name VARCHAR(20),
                   Code CHAR(1)
-                 )
-   AS
-   $$
-  SELECT name, code
-  FROM season;
-   $$ LANGUAGE sql
-      SECURITY DEFINER
+                ) AS
+$$
+   SELECT name, code
+   FROM season;
+$$ LANGUAGE sql
+   SECURITY DEFINER
    SET search_path FROM CURRENT
-      STABLE;
+   STABLE;
 
-   ALTER FUNCTION listSeasons() OWNER TO CURRENT_USER;
+ALTER FUNCTION listSeasons() OWNER TO CURRENT_USER;
 
 
 COMMIT;
