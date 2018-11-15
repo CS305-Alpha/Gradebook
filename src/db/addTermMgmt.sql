@@ -253,10 +253,12 @@ RETURNS TABLE (Course VARCHAR(8),
                Instructors VARCHAR
               ) AS
 $$
-BEGIN
-   RAISE WARNING 'Function not implemented';
-END
-$$ LANGUAGE plpgsql
+   SELECT course, sectionnumber, crn, schedule, location, startdate, enddate,
+   midtermdate, COALESCE(getInstructorName(instructor1),' ') ||
+                COALESCE(', ' || getInstructorName(instructor2),' ') ||
+                COALESCE(', ' || getInstructorName(instructor3)) instructors
+   FROM section WHERE term = $1;
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
