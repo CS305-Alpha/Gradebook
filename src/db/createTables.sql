@@ -17,6 +17,7 @@
 --PROVIDED AS IS. NO WARRANTIES EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
 
 --This script creates schema, tables, and indexes for the Gradebook application
+-- It also defines a few triggers on the Student and Instructor tables
 
 --E-mail address management is based on the discussion presented at:
 -- https://gist.github.com/smurthys/feba310d8cc89c4e05bdb797ca0c6cac
