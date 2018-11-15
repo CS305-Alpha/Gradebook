@@ -462,4 +462,97 @@ GRANT EXECUTE ON FUNCTION assignFinalGrade(student INT, sectionID INT,
    finalGradeAwarded VARCHAR(2)) TO alpha_GB_Instructor, alpha_GB_DBAdmin;
 
 
+--Function to get the course-section combos a student has attended in a
+--  year-season combo
+--For each matching section, returns course name and section number as well as
+--  a string of the form "course-sectionNumber";
+--This function is useful in showing Course-Section combinations directly
+--  without having to first explicitly choose a course to get sections
+
+CREATE OR REPLACE FUNCTION getStudentSections(studentID INT,
+                                                year NUMERIC(4,0),
+                                                seasonOrder NUMERIC(1,0)
+                                               )
+RETURNS TABLE(SectionID INT,
+              Course VARCHAR(8),
+              SectionNumber VARCHAR(3),
+              CourseSection VARCHAR(12)
+             )
+AS
+$$
+   SELECT N.ID, N.Course, N.SectionNumber,
+          N.Course || '-' || N.SectionNumber AS CourseSection
+   FROM Enrollee E JOIN Section N ON E.section = N.id 
+      JOIN Term T ON N.Term  = T.ID 
+   WHERE 1 = E.Student
+         AND T.Year = 2
+         AND T.Season = 3
+   ORDER BY CourseSection;
+$$ LANGUAGE sql
+   STABLE
+   RETURNS NULL ON NULL INPUT;
+
+ALTER FUNCTION getStudentSections(studentID INT,
+                                       year NUMERIC(4,0),
+                                       seasonOrder NUMERIC(1,0)
+                                          )
+   OWNER TO alpha;
+
+REVOKE ALL ON FUNCTION getStudentSections(studentID INT,
+                                             year NUMERIC(4,0),
+                                             seasonOrder NUMERIC(1,0)
+                                             )
+   FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION getStudentSections(studentID INT,
+                                                year NUMERIC(4,0),
+                                                seasonOrder NUMERIC(1,0)
+                                                )
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+
+
+--function to get the section number(s) of a course a student has attended
+CREATE OR REPLACE FUNCTION getStudentSections(studentID INT,
+                                                year NUMERIC(4,0),
+                                                seasonOrder NUMERIC(1,0),
+                                                courseNumber VARCHAR(8)
+                                               )
+RETURNS TABLE(SectionID INT, SectionNumber VARCHAR(3))
+AS
+$$
+
+   SELECT SectionID, SectionNumber
+   FROM getStudentSections($1, $2, $3)
+   WHERE Course ILIKE $4
+   ORDER BY SectionNumber;
+
+$$ LANGUAGE sql
+   STABLE
+   RETURNS NULL ON NULL INPUT;
+
+
+ALTER FUNCTION getStudentSections(studentID INT,
+                                          year NUMERIC(4,0),
+                                          seasonOrder NUMERIC(1,0),
+                                          courseNumber VARCHAR(8)
+                                          )
+   OWNER TO alpha;
+
+REVOKE ALL ON FUNCTION getStudentSections(studentID INT,
+                                          year NUMERIC(4,0),
+                                          seasonOrder NUMERIC(1,0),
+                                          courseNumber VARCHAR(8)
+                                          )
+   FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION getStudentSections(studentID INT,
+                                          year NUMERIC(4,0),
+                                          seasonOrder NUMERIC(1,0),
+                                          courseNumber VARCHAR(8)
+                                          )
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
+      alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+
+
 COMMIT;
