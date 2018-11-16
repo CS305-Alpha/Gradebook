@@ -548,7 +548,7 @@ REVOKE ALL ON FUNCTION getStudentSections(studentID INT,
    FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getStudentSections(studentID INT,
-                                          year NUMERIC(4,0),
+                                             year NUMERIC(4,0),
                                           seasonOrder NUMERIC(1,0),
                                           courseNumber VARCHAR(8)
                                           )
