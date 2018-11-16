@@ -554,7 +554,7 @@ GRANT EXECUTE ON FUNCTION getStudentSections(studentID INT,
                                           )
    TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
    alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin,
-      alpha_GB_Student;
+   alpha_GB_Student;
 
 
 COMMIT;
