@@ -139,6 +139,28 @@ DROP FUNCTION IF EXISTS getSections(INT, NUMERIC(4,0),
                                               NUMERIC(1,0), VARCHAR(8)
                                              );
 
+CREATE OR REPLACE FUNCTION getInstructorIDByIssuedID(schoolIssuedID VARCHAR(50))
+   RETURNS INT AS
+$$
+   SELECT I.ID
+   FROM Instructor I
+   WHERE TRIM(I.schoolIssuedID) ILIKE TRIM($1);
+$$ LANGUAGE sql
+   SECURITY DEFINER
+   SET search_path FROM CURRENT
+   STABLE
+   RETURNS NULL ON NULL INPUT;
+
+ALTER FUNCTION getInstructorIDByIssuedID(schoolIssuedID VARCHAR(50))
+   OWNER TO CURRENT_USER;
+
+REVOKE ALL ON FUNCTION getInstructorIDByIssuedID(schoolIssuedID VARCHAR(50))
+   FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION getInstructorIDByIssuedID(schoolIssuedID VARCHAR(50))
+   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar,
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+
 
 --function to get the years in which an instructor has taught
 DROP FUNCTION IF EXISTS getInstructorYears(INT);
