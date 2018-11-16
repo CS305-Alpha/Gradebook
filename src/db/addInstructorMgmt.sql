@@ -139,6 +139,7 @@ DROP FUNCTION IF EXISTS getSections(INT, NUMERIC(4,0),
                                               NUMERIC(1,0), VARCHAR(8)
                                              );
 
+
 CREATE OR REPLACE FUNCTION getInstructorIDByIssuedID(schoolIssuedID VARCHAR(50))
    RETURNS INT AS
 $$
