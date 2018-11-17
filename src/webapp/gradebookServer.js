@@ -280,6 +280,57 @@ app.get('/sections', function(request, response) {
    });
 });
 
+
+//Returns an array of dates for a given section id.  Omits dates when classes are
+// not held.
+app.get('/sectionschedule', function(request, response) {
+   //Decrypt the password recieved from the client.  This is a temporary development
+   //feature, since we don't have ssl set up yet
+   var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
+
+   //Connnection parameters for the Postgres client recieved in the request
+   var config = createConnectionParams(request.query.user, request.query.database,
+      passwordText, request.query.host, request.query.port);
+
+   var sectionID = request.query.sectionID;
+
+   var queryText = 'SELECT date FROM significantDate WHERE classesheld = false;';
+   var queryParams = [];
+   var closedDates = [];
+
+   executeQuery(response, config, queryText, queryParams, function(result) {
+      for(row in result.rows) {
+         closedDates.push(
+            {
+               "date": result.rows[row].date
+            }
+         );
+      }
+   });
+
+   queryText = 'SELECT getScheduleDates($1);';
+   queryParams = [sectionID];
+
+   executeQuery(response, config, queryText, queryParams, function(result) {
+      var classDates = [];
+      for(row in result.rows) {
+         if(!closedDates.includes(result.rows[row].date))
+         {
+            classDates.push(
+               {
+                  "date": result.rows[row].date
+               }
+            );
+         }
+      }
+      var jsonReturn = {
+         "classDates": classDates
+      };
+      response.send(JSON.stringify(jsonReturn));
+   });
+});
+
+
 //Return a table containing the attendance for a single section
 app.get('/attendance', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
