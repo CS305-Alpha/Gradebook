@@ -68,13 +68,13 @@ AS $$
    SELECT sd
    FROM EnumeratedDate
    WHERE CASE --test match to schedule by extracting the day-of-week for the date
-      WHEN EXTRACT(DOW FROM sd) = 0 THEN $3 LIKE '%N%'
-      WHEN EXTRACT(DOW FROM sd) = 1 THEN $3 LIKE '%M%'
-      WHEN EXTRACT(DOW FROM sd) = 2 THEN $3 LIKE '%T%'
-      WHEN EXTRACT(DOW FROM sd) = 3 THEN $3 LIKE '%W%'
-      WHEN EXTRACT(DOW FROM sd) = 4 THEN $3 LIKE '%R%'
-      WHEN EXTRACT(DOW FROM sd) = 5 THEN $3 LIKE '%F%'
-      WHEN EXTRACT(DOW FROM sd) = 6 THEN $3 LIKE '%S%'
+      WHEN EXTRACT(DOW FROM sd) = 0 THEN $3 ILIKE '%N%'
+      WHEN EXTRACT(DOW FROM sd) = 1 THEN $3 ILIKE '%M%'
+      WHEN EXTRACT(DOW FROM sd) = 2 THEN $3 ILIKE '%T%'
+      WHEN EXTRACT(DOW FROM sd) = 3 THEN $3 ILIKE '%W%'
+      WHEN EXTRACT(DOW FROM sd) = 4 THEN $3 ILIKE '%R%'
+      WHEN EXTRACT(DOW FROM sd) = 5 THEN $3 ILIKE '%F%'
+      WHEN EXTRACT(DOW FROM sd) = 6 THEN $3 ILIKE '%S%'
    END;
 $$ LANGUAGE sql
             IMMUTABLE
@@ -94,15 +94,14 @@ GRANT EXECUTE ON FUNCTION getScheduleDates(startDate DATE, endDate DATE,
    alpha_GB_Registrar, alpha_GB_RegistrarAdmin, alpha_GB_Admissions,
    alpha_GB_DBAdmin;
 
+
 --Returns a section schedule by providing a sectionID.  Does NOT consider
 -- off-days, holidays, etc.
-CREATE FUNCTION getScheduleDates(sectionID INT)
+CREATE OR REPLACE FUNCTION getScheduleDates(sectionID INT)
 RETURNS TABLE (ScheduleDate DATE) AS 
 $$
-
    SELECT getScheduleDates(S.startdate, S.enddate, S.schedule)
    FROM section S WHERE S.id = $1;
-
 $$ LANGUAGE sql
             IMMUTABLE
             RETURNS NULL ON NULL INPUT;
