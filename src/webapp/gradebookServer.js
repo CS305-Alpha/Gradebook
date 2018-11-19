@@ -171,7 +171,7 @@ app.get('/years', function(request, response) {
    } 
    else if (userRole == 'alpha_GB_Student')
    {
-      queryText = 'SELECT Year FROM getStudentYears($1);';
+      queryText = 'SELECT Year FROM getYearsAsStudent();';
    }
    else
    {
