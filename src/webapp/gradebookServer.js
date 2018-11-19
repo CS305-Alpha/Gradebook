@@ -168,6 +168,7 @@ app.get('/years', function(request, response) {
    if (userRole == 'alpha_GB_Instructor')
    {
       queryText = 'SELECT Year FROM getInstructorYears($1);';
+      queryParams = [userID];
    } 
    else if (userRole == 'alpha_GB_Student')
    {
