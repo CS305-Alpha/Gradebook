@@ -173,7 +173,9 @@ app.get('/years', function(request, response) {
    {
       queryText = 'SELECT Year FROM getStudentYears($1);';
    }
-   else { queryText = 'SELECT DISTINCT year FROM term;';
+   else
+   {
+      queryText = 'SELECT DISTINCT year FROM term;';
    }
 
    var queryParams = [userID];
