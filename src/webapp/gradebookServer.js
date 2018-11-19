@@ -300,11 +300,7 @@ app.get('/sectionschedule', function(request, response) {
 
    executeQuery(response, config, queryText, queryParams, function(result) {
       for(row in result.rows) {
-         closedDates.push(
-            {
-               "date": result.rows[row].date
-            }
-         );
+         closedDates.push( result.rows[row].date);
       }
    });
 
@@ -316,11 +312,7 @@ app.get('/sectionschedule', function(request, response) {
       for(row in result.rows) {
          if(!closedDates.includes(result.rows[row].date))
          {
-            classDates.push(
-               {
-                  "date": result.rows[row].date
-               }
-            );
+            classDates.push(result.rows[row].date);
          }
       }
       var jsonReturn = {
