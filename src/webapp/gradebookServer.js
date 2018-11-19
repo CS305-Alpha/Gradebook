@@ -294,7 +294,7 @@ app.get('/sectionschedule', function(request, response) {
 
    var sectionID = request.query.sectionID;
 
-   var queryText = 'SELECT date FROM significantDate WHERE classesheld = false;';
+   var queryText = 'SELECT date::VARCHAR FROM significantDate WHERE NOT classesheld;';
    var queryParams = [];
    var closedDates = [];
 
