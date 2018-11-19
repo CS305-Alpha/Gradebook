@@ -308,7 +308,7 @@ app.get('/sectionschedule', function(request, response) {
       }
    });
 
-   queryText = 'SELECT getScheduleDates($1);';
+   queryText = 'SELECT scheduledate::VARCHAR AS date FROM getScheduleDates($1);';
    queryParams = [sectionID];
 
    executeQuery(response, config, queryText, queryParams, function(result) {
