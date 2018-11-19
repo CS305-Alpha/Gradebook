@@ -22,6 +22,7 @@
 
 START TRANSACTION;
 
+SET LOCAL search_path TO 'alpha', 'pg_temp';
 -- addAttendanceMgmt Functions: 
 DROP FUNCTION IF EXISTS getScheduleDates(startDate DATE, endDate DATE,
                                  schedule VARCHAR(7)
