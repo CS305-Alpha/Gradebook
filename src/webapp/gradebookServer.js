@@ -165,6 +165,7 @@ app.get('/years', function(request, response) {
    var queryText;
 
    //Set the query text
+   var queryParams;
    if (userRole == 'alpha_GB_Instructor')
    {
       queryText = 'SELECT Year FROM getInstructorYears($1);';
