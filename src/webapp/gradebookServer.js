@@ -39,9 +39,11 @@ const monthNames = [
    'Dec.'
 ];
 
-var pg = require('pg'); //Postgres client module   | https://github.com/brianc/node-postgres
-var sjcl = require('sjcl'); //Encryption module    | https://github.com/bitwiseshiftleft/sjcl
-var express = require('express'); //Express module | https://github.com/expressjs/express
+var pg = require('pg'); //Postgres client module               | https://github.com/brianc/node-postgres
+var sjcl = require('sjcl'); //Encryption module                | https://github.com/bitwiseshiftleft/sjcl
+var express = require('express'); //Express module             | https://github.com/expressjs/express
+var fs = require('fs'); //File System module                   | https://nodejs.org/api/fs.html
+var copyFrom = require('pg-copy-streams').from; //Copy Module  | https://github.com/brianc/node-pg-copy-streams
 
 var app = express();
 
@@ -130,7 +132,7 @@ app.get('/login', function(request, response) {
    var instructorEmail = request.query.instructoremail.trim();
 
    //Set the query text
-   var queryText = 'SELECT ID, FName, MName, LName, Department FROM gradebook.getInstructor($1);';
+   var queryText = 'SELECT ID, FName, MName, LName, Department FROM getInstructor($1);';
    var queryParams = [instructorEmail];
 
    //Execute the query
@@ -149,7 +151,7 @@ app.get('/login', function(request, response) {
    });
 });
 
-//Return a list of years a certain instructor has taught sections
+//Return a list of years a certain user has taught sections
 app.get('/years', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
@@ -160,11 +162,26 @@ app.get('/years', function(request, response) {
       passwordText, request.query.host, request.query.port);
 
    //Get the params from the url
-   var instructorID = request.query.instructorid;
+   var userID = request.query.userID;
+   var userRole = request.query.userRole; //assuming this is provided at the UI level
+   var queryText;
 
    //Set the query text
-   var queryText = 'SELECT Year FROM gradebook.getInstructorYears($1);';
-   var queryParams = [instructorID];
+   var queryParams;
+   if (userRole == 'alpha_GB_Instructor')
+   {
+      queryText = 'SELECT Year FROM getInstructorYears($1);';
+      queryParams = [userID];
+   } 
+   else if (userRole == 'alpha_GB_Student')
+   {
+      queryText = 'SELECT Year FROM getYearsAsStudent();';
+   }
+   else
+   {
+      queryText = 'SELECT DISTINCT year FROM term;';
+   }
+
 
    //Execute the query
    executeQuery(response, config, queryText, queryParams, function(result) {
@@ -212,6 +229,7 @@ app.get('/seasons', function(request, response) {
       queryParams = [year];
    }
 
+
    //Execute the query
    executeQuery(response, config, queryText, queryParams, function(result) {
       var seasons = []; //Put the rows from the query into json format
@@ -244,7 +262,7 @@ app.get('/courses', function(request, response) {
    var year = request.query.year;
    var seasonOrder = request.query.seasonorder;
 
-   var queryText = 'SELECT Course FROM gradebook.getInstructorCourses($1, $2, $3);';
+   var queryText = 'SELECT Course FROM getInstructorCourses($1, $2, $3);';
    var queryParams = [instructorID, year, seasonOrder];
 
    executeQuery(response, config, queryText, queryParams, function(result) {
@@ -275,7 +293,7 @@ app.get('/sections', function(request, response) {
    var seasonOrder = request.query.seasonorder;
    var courseNumber = request.query.coursenumber;
 
-   var queryText = 'SELECT SectionID, SectionNumber FROM gradebook.getInstructorSections($1, $2, $3, $4);';
+   var queryText = 'SELECT SectionID, SectionNumber FROM getInstructorSections($1, $2, $3, $4);';
    var queryParams = [instructorID, year, seasonOrder, courseNumber];
 
    executeQuery(response, config, queryText, queryParams, function(result) {
@@ -295,6 +313,49 @@ app.get('/sections', function(request, response) {
    });
 });
 
+
+//Returns an array of dates for a given section id.  Omits dates when classes are
+// not held.
+app.get('/sectionschedule', function(request, response) {
+   //Decrypt the password recieved from the client.  This is a temporary development
+   //feature, since we don't have ssl set up yet
+   var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
+
+   //Connnection parameters for the Postgres client recieved in the request
+   var config = createConnectionParams(request.query.user, request.query.database,
+      passwordText, request.query.host, request.query.port);
+
+   var sectionID = request.query.sectionID;
+
+   var queryText = 'SELECT date::VARCHAR FROM significantDate WHERE NOT classesheld;';
+   var queryParams = [];
+   var closedDates = [];
+
+   executeQuery(response, config, queryText, queryParams, function(result) {
+      for(row in result.rows) {
+         closedDates.push( result.rows[row].date);
+      }
+   });
+
+   queryText = 'SELECT scheduledate::VARCHAR AS date FROM getScheduleDates($1);';
+   queryParams = [sectionID];
+
+   executeQuery(response, config, queryText, queryParams, function(result) {
+      var classDates = [];
+      for(row in result.rows) {
+         if(!closedDates.includes(result.rows[row].date))
+         {
+            classDates.push(result.rows[row].date);
+         }
+      }
+      var jsonReturn = {
+         "classDates": classDates
+      };
+      response.send(JSON.stringify(jsonReturn));
+   });
+});
+
+
 //Return a table containing the attendance for a single section
 app.get('/attendance', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
@@ -309,11 +370,11 @@ app.get('/attendance', function(request, response) {
    var sectionID = request.query.sectionid;
 
    //Set the query text and package the parameters in an array
-   var queryText = 'SELECT AttendanceCSVWithHeader FROM gradebook.getAttendance($1);';
+   var queryText = 'SELECT AttendanceCSVWithHeader FROM getAttendance($1);';
    var queryParams = [sectionID];
 
    //Setup the second query, to get the attendance code description table
-   var queryTextAttnDesc = 'SELECT Status, Description FROM gradebook.AttendanceStatus';
+   var queryTextAttnDesc = 'SELECT Status, Description FROM AttendanceStatus';
 
    //Execute the attendance description query first
    //attnStatusRes will hold the table containg the code descriptions
@@ -422,6 +483,49 @@ app.get('/attendance', function(request, response) {
          response.header("Content-Type", "text/html");
          response.send(table);
       });
+   });
+});
+
+// Imports a section roster from a given file
+app.post('/importSectionRoster', function(request, response) {
+   //Decrypt the password recieved from the client.  This is a temporary development
+   //feature, since we don't have ssl set up yet
+   var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
+
+   //Connnection parameters for the Postgres client recieved in the request
+   var config = createConnectionParams(request.query.user, request.query.database,
+      passwordText, request.query.host, request.query.port);
+
+   //Get file from client
+   var file = request.query.file;
+
+   //Pipe from file into staging table
+   pg.connect(function(err, client, done) {
+      if(err) {
+         console.log(err);
+      } else {
+         var stream = client.query(copyFrom('Copy RosterStaging FROM STDIN'));
+         var fileStream = fs.createReadStream(file);
+         fileStream.on('error', done);
+         stream.on('error', done);
+         stream.on('end', done);
+         fileStream.pipe(stream);
+      }
+   });
+
+   //Setup for function importRoster
+   var queryText = 'SELECT * FROM importRoster();';
+   var queryParams = [];
+
+   executeQuery(response, config, queryText, queryParams, function(result) {
+   });
+
+   //Set queryText to Truncate the RosterStaging table
+   queryText = 'TRUNCATE TABLE RosterStaging;';
+   queryParams = [];
+
+   executeQuery(response, config, queryText, queryParams, function(result) {
+      response.send(result);
    });
 });
 
