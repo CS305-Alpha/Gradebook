@@ -206,7 +206,8 @@ app.get('/seasons', function(request, response) {
       queryText = 'SELECT SeasonOrder, SeasonName FROM getSeasonsAsStudent();';
    }
    else {
-      queryText = 'SELECT DISTINCT season FROM term WHERE Year = ($2);';
+      queryText = 'SELECT S."Order", S.Name FROM term T JOIN season S ON ' +
+                  'T.season = S."Order" WHERE T.Year = $2;';
    }
 
    //Execute the query
