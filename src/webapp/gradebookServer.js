@@ -200,7 +200,7 @@ app.get('/seasons', function(request, response) {
    var queryParams = [userID, year];
 
    if(userRole == 'alpha_GB_Instructor') {
-      queryText = 'SELECT Order, Name FROM getInstructorSeasons($1, $2);';
+      queryText = 'SELECT SeasonOrder, SeasonName FROM getInstructorSeasons($1, $2);';
    }
    else if(userRole == 'alpha_GB_Student') {
       queryText = 'SELECT SeasonOrder, SeasonName FROM getSeasonsAsStudent();';
