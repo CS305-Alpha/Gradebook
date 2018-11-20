@@ -39,9 +39,11 @@ const monthNames = [
    'Dec.'
 ];
 
-var pg = require('pg'); //Postgres client module   | https://github.com/brianc/node-postgres
-var sjcl = require('sjcl'); //Encryption module    | https://github.com/bitwiseshiftleft/sjcl
-var express = require('express'); //Express module | https://github.com/expressjs/express
+var pg = require('pg'); //Postgres client module               | https://github.com/brianc/node-postgres
+var sjcl = require('sjcl'); //Encryption module                | https://github.com/bitwiseshiftleft/sjcl
+var express = require('express'); //Express module             | https://github.com/expressjs/express
+var fs = require('fs'); //File System module                   | https://nodejs.org/api/fs.html
+var copyFrom = require('pg-copy-streams').from; //Copy Module  | https://github.com/brianc/node-pg-copy-streams
 
 var app = express();
 
@@ -74,7 +76,7 @@ function executeQuery(response, config, queryText, queryParams, queryCallback) {
          console.log(err);
       }
       else { //Try and execute the query
-         client.query(queryText, queryParams, function (err, result) {
+         client.query(queryText, queryParams, function(err, result) {
             if(err) { //If the query returns an error, 500
                response.status(500).send('500 - Query execution error');
                console.log(err);
@@ -89,7 +91,7 @@ function executeQuery(response, config, queryText, queryParams, queryCallback) {
 }
 
 //Tell the browser we don't have a favicon
-app.get('/favicon.ico', function (request, response) {
+app.get('/favicon.ico', function(request, response) {
    response.status(204).send(); //No content
 });
 
@@ -105,15 +107,15 @@ app.get('/index.html', function(request, response) {
 
 //Serve css and js dependencies
 app.get('/css/materialize.min.css', function(request, response) {
-	response.sendFile('client/css/materialize.min.css', {root: __dirname});
+   response.sendFile('client/css/materialize.min.css', {root: __dirname});
 });
 
 app.get('/js/materialize.min.js', function(request, response) {
-	response.sendFile('client/js/materialize.min.js', {root: __dirname});
+   response.sendFile('client/js/materialize.min.js', {root: __dirname});
 });
 
 app.get('/js/index.js', function(request, response) {
-	response.sendFile('client/js/index.js', {root: __dirname});
+   response.sendFile('client/js/index.js', {root: __dirname});
 });
 
 //Returns instructor id and name from a provided email.
@@ -338,7 +340,7 @@ app.get('/attendance', function(request, response) {
          var months = ''; //Stores a csv of months
          var days = [dateRow[0], dateRow[1], dateRow[2]]; //Stores a csv of days
 
-         var monthSpanWidths =[]; //Stores the span associated with each month
+         var monthSpanWidths = []; //Stores the span associated with each month
          var currentSpanWidth = 1; //Width of the current span
 
          for(i = 3; i < rowLen; i++) { //For each date in the date row
@@ -413,7 +415,7 @@ app.get('/attendance', function(request, response) {
                if(style != '') {
                   table += ' style="' + style + '"';
                }
-               table +=  ' >' + cellContents + '</td>';
+               table += ' >' + cellContents + '</td>';
             }
             table += '</tr>';
          });
@@ -425,9 +427,52 @@ app.get('/attendance', function(request, response) {
    });
 });
 
-app.use(function(err, req, res, next){
-  console.error(err);
-  res.status(500).send('Internal Server Error');
+// Imports a section roster from a given file
+app.post('/importSectionRoster', function(request, response) {
+   //Decrypt the password recieved from the client.  This is a temporary development
+   //feature, since we don't have ssl set up yet
+   var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
+
+   //Connnection parameters for the Postgres client recieved in the request
+   var config = createConnectionParams(request.query.user, request.query.database,
+      passwordText, request.query.host, request.query.port);
+
+   //Get file from client
+   var file = request.query.file;
+
+   //Pipe from file into staging table
+   pg.connect(function(err, client, done) {
+      if(err) {
+         console.log(err);
+      } else {
+         var stream = client.query(copyFrom('Copy RosterStaging FROM STDIN'));
+         var fileStream = fs.createReadStream(file);
+         fileStream.on('error', done);
+         stream.on('error', done);
+         stream.on('end', done);
+         fileStream.pipe(stream);
+      }
+   });
+
+   //Setup for function importRoster
+   var queryText = 'SELECT * FROM importRoster();';
+   var queryParams = [];
+
+   executeQuery(response, config, queryText, queryParams, function(result) {
+   });
+
+   //Set queryText to Truncate the RosterStaging table
+   queryText = 'TRUNCATE TABLE RosterStaging;';
+   queryParams = [];
+
+   executeQuery(response, config, queryText, queryParams, function(result) {
+      response.send(result);
+   });
+});
+
+app.use(function(err, req, res, next) {
+   console.error(err);
+   res.status(500).send('Internal Server Error');
 });
 
 server = app.listen(80);
