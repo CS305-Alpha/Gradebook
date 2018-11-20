@@ -370,7 +370,7 @@ GRANT EXECUTE ON FUNCTION getInstructorSections(instructorID INT,
                                           courseNumber VARCHAR(8)
                                           )
    TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
-      alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
+   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 --Returns the full name of an instructor given an instructor ID
 CREATE OR REPLACE FUNCTION getInstructorName(instructorID INT)
@@ -382,10 +382,10 @@ $$
     FROM Instructor
     WHERE id = $1;
 $$ LANGUAGE sql
-SECURITY DEFINER
-SET search_path FROM CURRENT;
-STABLE
-RETURNS NULL ON NULL INPUT;
+   SECURITY DEFINER
+   SET search_path FROM CURRENT
+   STABLE
+   RETURNS NULL ON NULL INPUT;
 
 ALTER FUNCTION getInstructorName(instructorID INT) OWNER TO CURRENT_USER;
 

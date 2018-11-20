@@ -68,12 +68,16 @@ GRANT EXECUTE ON FUNCTION changeCourseDefaultTitle(courseNumber VARCHAR(8),
 --Returns no rows if no course titles reasonably match the argument.
 CREATE OR REPLACE FUNCTION searchCourseTitles(titleSearch VARCHAR(100))
    RETURNS TABLE(Number VARCHAR(8),
-                 Title VARCHAR(100),
+                 DefaultTitle VARCHAR(100),
                  Difference INTEGER) AS
 $$
-   SELECT *
+   SELECT Number, DefaultTitle,
+      CASE
+         WHEN DefaultTitle = $1 THEN 0
+         ELSE 1
+      END
    FROM Course
-   WHERE DefaultTitle LIKE '%' || TRIM($1) || '%';
+   WHERE DefaultTitle ILIKE '%' || TRIM($1) || '%';
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -100,15 +104,17 @@ CREATE OR REPLACE FUNCTION addCourse(name VARCHAR(8),
                                      defaultTitle VARCHAR(100))
    RETURNS VOID AS
 $$
-   IF NOT EXISTS
-      SELECT * FROM Course
-      WHERE Number = $1;
+BEGIN
+   IF NOT EXISTS( SELECT * FROM Course
+                  WHERE Number = $1 )
    THEN
       RAISE EXCEPTION 'Current user is not an instructor of specified student';
    ELSE
       INSERT INTO Course (Number, DefaultTitle)
       VALUES ($1, $2);
-$$ LANGUAGE sql
+   END IF;
+END;
+$$ LANGUAGE plpgsql
    SECURITY DEFINER
    SET search_path FROM CURRENT;
 
@@ -127,8 +133,8 @@ GRANT EXECUTE ON FUNCTION addCourse(name VARCHAR(8), defaultTitle VARCHAR(100))
 CREATE OR REPLACE FUNCTION getCourseDefaultTitle(courseNumber VARCHAR(8))
    RETURNS VARCHAR(100) AS
 $$
-   SELECT title FROM course c
-   WHERE c.title ILIKE '%' || $1 || '%';
+   SELECT defaultTitle FROM course c
+   WHERE c.number ILIKE '%' || $1 || '%';
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT

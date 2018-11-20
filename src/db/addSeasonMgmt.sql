@@ -116,8 +116,8 @@ CREATE OR REPLACE FUNCTION listSeasons()
                   Code CHAR(1)
                 ) AS
 $$
-   SELECT name, code
-   FROM season;
+   SELECT "Order", s.name, s.code
+   FROM season s;
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT

@@ -35,7 +35,7 @@ START TRANSACTION;
 -- last for security purposes
 SET LOCAL search_path TO 'alpha', 'pg_temp';
 
-CREATE TABLE Course
+CREATE TABLE IF NOT EXISTS Course
 (
    --Wonder if this table will eventually need a separate ID field
    Number VARCHAR(8) NOT NULL PRIMARY KEY, --e.g., 'CS170'
@@ -48,7 +48,7 @@ GRANT ALL ON Course TO alpha_GB_DBAdmin;
 
 
 
-CREATE TABLE Season
+CREATE TABLE IF NOT EXISTS Season
 (
    --Order denotes the sequence of seasons within a year: 0, 1,...9
    "Order" NUMERIC(1,0) PRIMARY KEY CHECK ("Order" >= 0),
@@ -63,7 +63,7 @@ CREATE TABLE Season
 );
 
 --enforce case-insensitive uniqueness of season name
-CREATE UNIQUE INDEX idx_Unique_SeasonName ON Season(LOWER(TRIM(Name)));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_Unique_SeasonName ON Season(LOWER(TRIM(Name)));
 
 ALTER TABLE Season OWNER TO CURRENT_USER;
 REVOKE ALL ON Season FROM PUBLIC;
@@ -71,7 +71,7 @@ GRANT ALL ON Season TO alpha_GB_DBAdmin;
 
 
 
-CREATE TABLE Term
+CREATE TABLE IF NOT EXISTS Term
 (
    ID SERIAL NOT NULL PRIMARY KEY,
    Year NUMERIC(4,0) NOT NULL CHECK (Year > 0), --'2017'
@@ -87,7 +87,7 @@ GRANT ALL ON Term TO alpha_GB_DBAdmin;
 
 
 
-CREATE TABLE SignificantDate
+CREATE TABLE IF NOT EXISTS SignificantDate
 (
    Term INTEGER REFERENCES Term,
    Date DATE NOT NULL,
@@ -106,7 +106,7 @@ GRANT ALL ON SignificantDate TO alpha_GB_DBAdmin;
 
 
 
-CREATE TABLE Instructor
+CREATE TABLE IF NOT EXISTS Instructor
 (
    ID SERIAL PRIMARY KEY,
    FName VARCHAR(50) NOT NULL,
@@ -121,12 +121,12 @@ CREATE TABLE Instructor
 );
 
 --enforce case-insensitive uniqueness of instructor e-mail addresses
-CREATE UNIQUE INDEX idx_Unique_InstructorEmail
+CREATE UNIQUE INDEX IF NOT EXISTS idx_Unique_InstructorEmail
 ON Instructor(LOWER(TRIM(Email)));
 
 --Create a partial index on the instructor names.  This enforces the CONSTRAINT
 -- that only one of any (FName, NULL, LName) is unique
-CREATE UNIQUE INDEX idx_Unique_Names_NULL
+CREATE UNIQUE INDEX IF NOT EXISTS idx_Unique_Names_NULL
 ON Instructor(FName, LName)
 WHERE MName IS NULL;
 
@@ -136,7 +136,7 @@ GRANT ALL ON Instructor TO alpha_GB_DBAdmin;
 
 
 
-CREATE TABLE Section
+CREATE TABLE IF NOT EXISTS Section
 (
    ID SERIAL PRIMARY KEY,
    Term INT NOT NULL REFERENCES Term,
@@ -170,7 +170,7 @@ GRANT ALL ON Section TO alpha_GB_DBAdmin;
 
 --Table to store all possible letter grades
 --some universities permit A+
-CREATE TABLE Grade
+CREATE TABLE IF NOT EXISTS Grade
 (
    Letter VARCHAR(2) NOT NULL PRIMARY KEY,
    GPA NUMERIC(4,3) NOT NULL,
@@ -189,7 +189,7 @@ GRANT ALL ON Grade TO alpha_GB_DBAdmin;
 
 
 --Table to store mapping of percentage score to a letter grade: varies by section
-CREATE TABLE Section_GradeTier
+CREATE TABLE IF NOT EXISTS Section_GradeTier
 (
    Section INT REFERENCES Section,
    LetterGrade VARCHAR(2) NOT NULL REFERENCES Grade,
@@ -205,7 +205,7 @@ GRANT ALL ON Section_GradeTier TO alpha_GB_DBAdmin;
 
 
 
-CREATE TABLE Student
+CREATE TABLE IF NOT EXISTS Student
 (
    ID SERIAL PRIMARY KEY,
    FName VARCHAR(50), --at least one of the name fields must be used: see below
@@ -221,7 +221,7 @@ CREATE TABLE Student
 );
 
 --enforce case-insensitive uniqueness of student e-mail addresses
-CREATE UNIQUE INDEX idx_Unique_StudentEmail
+CREATE UNIQUE INDEX IF NOT EXISTS idx_Unique_StudentEmail
 ON Student(LOWER(TRIM(Email)));
 
 ALTER TABLE Student OWNER TO CURRENT_USER;
@@ -230,7 +230,7 @@ GRANT ALL ON Student TO alpha_GB_DBAdmin;
 
 
 
-CREATE TABLE Major
+CREATE TABLE IF NOT EXISTS Major
 (
    Name VARCHAR(30) PRIMARY KEY  --ensures names of majors are unique
 );
@@ -241,7 +241,7 @@ GRANT ALL ON Major TO alpha_GB_DBAdmin;
 
 
 
-CREATE TABLE Student_Major
+CREATE TABLE IF NOT EXISTS Student_Major
 (
     Student INTEGER NOT NULL REFERENCES Student,
     Major VARCHAR(30) NOT NULL REFERENCES Major
@@ -253,7 +253,7 @@ GRANT ALL ON Student_Major TO alpha_GB_DBAdmin;
 
 
 
-CREATE TABLE Enrollee
+CREATE TABLE IF NOT EXISTS Enrollee
 (
    Student INT NOT NULL REFERENCES Student,
    Section INT REFERENCES Section,
@@ -279,7 +279,7 @@ GRANT ALL ON Enrollee TO alpha_GB_DBAdmin;
 
 
 
-CREATE TABLE AttendanceStatus
+CREATE TABLE IF NOT EXISTS AttendanceStatus
 (
    Status CHAR(1) NOT NULL PRIMARY KEY, --'P', 'A', ...
    Description VARCHAR(20) NOT NULL UNIQUE --'Present', 'Absent', ...
@@ -291,7 +291,7 @@ GRANT ALL ON AttendanceStatus TO alpha_GB_DBAdmin;
 
 
 
-CREATE TABLE AttendanceRecord
+CREATE TABLE IF NOT EXISTS AttendanceRecord
 (
    Student INT NOT NULL,
    Section INT NOT NULL,
@@ -307,7 +307,7 @@ GRANT ALL ON AttendanceRecord TO alpha_GB_DBAdmin;
 
 
 
-CREATE TABLE Section_AssessmentComponent
+CREATE TABLE IF NOT EXISTS Section_AssessmentComponent
 (
    Section INT NOT NULL REFERENCES Section,
    Type VARCHAR(20) NOT NULL, --"Assignment", "Quiz", "Exam",...
@@ -322,7 +322,7 @@ GRANT ALL ON Section_AssessmentComponent TO alpha_GB_DBAdmin;
 
 
 
-CREATE TABLE Section_AssessmentItem
+CREATE TABLE IF NOT EXISTS Section_AssessmentItem
 (
    Section INT NOT NULL,
    Component VARCHAR(20) NOT NULL,
@@ -341,7 +341,7 @@ GRANT ALL ON Section_AssessmentItem TO alpha_GB_DBAdmin;
 
 
 
-CREATE TABLE Enrollee_AssessmentItem
+CREATE TABLE IF NOT EXISTS Enrollee_AssessmentItem
 (
    Student INT NOT NULL,
    Section INT NOT NULL,
@@ -380,6 +380,12 @@ $$
    LANGUAGE plpgsql
    SECURITY DEFINER
    SET search_path FROM CURRENT;
+
+   
+DROP TRIGGER IF EXISTS triggerSchoolIDUniquenessInsertIns ON Instructor;
+DROP TRIGGER IF EXISTS triggerSchoolIDUniquenessInsertStu ON Student;
+DROP TRIGGER IF EXISTS triggerSchoolIDUniquenessUpdateIns ON Instructor;
+DROP TRIGGER IF EXISTS triggerSchoolIDUniquenessUpdateStu ON Student;
 
 
 CREATE TRIGGER triggerSchoolIDUniquenessInsertIns BEFORE INSERT ON Instructor

@@ -34,19 +34,6 @@ START TRANSACTION;
 --Suppress messages below WARNING level for the duration of this script
 SET LOCAL client_min_messages TO WARNING;
 
---Make sure current user is superuser
-DO
-$$
-BEGIN
-   IF NOT EXISTS (SELECT * FROM pg_catalog.pg_roles
-                  WHERE rolname = current_user AND rolsuper = TRUE
-                 ) THEN
-      RAISE EXCEPTION 'Insufficient privileges: '
-                      'script must be run by a superuser';
-   END IF;
-END
-$$;
-
 
 --Create a temporary function to test if a role with the given name exists
 -- performs case-sensitive test for roleName;
