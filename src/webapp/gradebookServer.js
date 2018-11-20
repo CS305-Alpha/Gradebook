@@ -197,7 +197,7 @@ app.get('/seasons', function(request, response) {
    var queryParams;
 
    //Set the query
-   var queryParams = [userID, year];
+   var queryParams;
 
    if(userRole == 'alpha_GB_Instructor') {
       queryText = 'SELECT SeasonOrder, SeasonName FROM getInstructorSeasons($1, $2);';
