@@ -180,7 +180,6 @@ app.get('/years', function(request, response) {
       queryText = 'SELECT DISTINCT year FROM term;';
    }
 
-   var queryParams = [userID];
 
    //Execute the query
    executeQuery(response, config, queryText, queryParams, function(result) {
