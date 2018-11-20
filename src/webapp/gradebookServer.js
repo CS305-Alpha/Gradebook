@@ -181,7 +181,7 @@ app.get('/years', function(request, response) {
    });
 });
 
-//Return a list of seasons a user has attended during a certain year
+//Return a list of seasons an instructor taught in during a certain year
 app.get('/seasons', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
@@ -192,25 +192,12 @@ app.get('/seasons', function(request, response) {
       passwordText, request.query.host, request.query.port);
 
    //Get the params from the url
-   var userID = request.query.userid;
-   var userRole = request.query.userRole;
+   var instructorID = request.query.instructorid;
    var year = request.query.year;
 
-   var queryText;
-   var queryParams;
-
-   //Set the query
-   var queryParams = [userID, year];
-
-   if (userRole == 'alpha_GB_Instructor') {
-      queryText = 'SELECT Order, Name FROM getInstructorSeasons($1, $2);';
-   }
-   else if (userRole == 'alpha_GB_Student') {
-      queryText = 'SELECT Order, Name FROM getStudentSeasons($1, $2);';
-   }
-   else {
-      queryText = 'SELECT DISTINCT season FROM term WHERE Year = ($2);';
-   }
+   //Set the query text
+   var queryText = 'SELECT SeasonOrder, SeasonName FROM gradebook.getInstructorSeasons($1, $2);';
+   var queryParams = [instructorID, year];
 
    //Execute the query
    executeQuery(response, config, queryText, queryParams, function(result) {
