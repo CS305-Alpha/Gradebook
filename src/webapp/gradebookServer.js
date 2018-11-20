@@ -1,21 +1,16 @@
 /*
 Zach Boylan, Zaid Bhujwala, Andrew Figueroa, Steven Rollo
-
 Data Science & Systems Lab (DASSL), Western Connecticut State University
-
 Copyright (c) 2017- DASSL. ALL RIGHTS RESERVED.
 Licensed to others under CC 4.0 BY-NC-SA
 https://creativecommons.org/licenses/by-nc-sa/4.0/
-
 ALL ARTIFACTS PROVIDED AS IS. NO WARRANTIES EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
-
 Gradebook node.js web server
 This program serves a Gradebook home page that allows an instructor to
 view attendance based on a year, season, course, and section provided
 Currently, database connection parameters must also be provided - these must
 point to a database with Gradebook installed.  Additionally, the server expects
 all Gradebook objects to exist in a schema called "gradebook".
-
 A static page is served at '/', along with some js and css dependencies
 Additionally, five REST calls are implemented that this pages uses to
 get data from the Gradebook db
@@ -68,14 +63,14 @@ This should help cut down on repeated code between the url handlers.
 */
 function executeQuery(response, config, queryText, queryParams, queryCallback) {
    var client = new pg.Client(config); //Connect to pg instance
-   client.connect(function (err) {
-      if (err) { //If a connection error happens, 500
+   client.connect(function(err) {
+      if(err) { //If a connection error happens, 500
          response.status(500).send('500 - Database connection error');
          console.log(err);
       }
       else { //Try and execute the query
-         client.query(queryText, queryParams, function (err, result) {
-            if (err) { //If the query returns an error, 500
+         client.query(queryText, queryParams, function(err, result) {
+            if(err) { //If the query returns an error, 500
                response.status(500).send('500 - Query execution error');
                console.log(err);
             }
@@ -89,35 +84,35 @@ function executeQuery(response, config, queryText, queryParams, queryCallback) {
 }
 
 //Tell the browser we don't have a favicon
-app.get('/favicon.ico', function (request, response) {
+app.get('/favicon.ico', function(request, response) {
    response.status(204).send(); //No content
 });
 
 //Serve our homepage when a user goes to the root
-app.get('/', function (request, response) {
-   response.sendFile('client/index.html', { root: __dirname });
+app.get('/', function(request, response) {
+   response.sendFile('client/index.html', {root: __dirname});
 });
 
 //Serve our homepage when a user goes to the root
-app.get('/index.html', function (request, response) {
-   response.sendFile('client/index.html', { root: __dirname });
+app.get('/index.html', function(request, response) {
+   response.sendFile('client/index.html', {root: __dirname});
 });
 
 //Serve css and js dependencies
-app.get('/css/materialize.min.css', function (request, response) {
-   response.sendFile('client/css/materialize.min.css', { root: __dirname });
+app.get('/css/materialize.min.css', function(request, response) {
+   response.sendFile('client/css/materialize.min.css', {root: __dirname});
 });
 
-app.get('/js/materialize.min.js', function (request, response) {
-   response.sendFile('client/js/materialize.min.js', { root: __dirname });
+app.get('/js/materialize.min.js', function(request, response) {
+   response.sendFile('client/js/materialize.min.js', {root: __dirname});
 });
 
-app.get('/js/index.js', function (request, response) {
-   response.sendFile('client/js/index.js', { root: __dirname });
+app.get('/js/index.js', function(request, response) {
+   response.sendFile('client/js/index.js', {root: __dirname});
 });
 
 //Returns instructor id and name from a provided email.
-app.get('/login', function (request, response) {
+app.get('/login', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
    var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
@@ -134,10 +129,10 @@ app.get('/login', function (request, response) {
    var queryParams = [instructorEmail];
 
    //Execute the query
-   executeQuery(response, config, queryText, queryParams, function (result) {
+   executeQuery(response, config, queryText, queryParams, function(result) {
       //Check if any rows are returned.  No rows implies that the provided
       //email does not match an existing instructor
-      if (result.rows.length == 0) {
+      if(result.rows.length == 0) {
          response.status(401).send('401 - Login failed');
       }
       else {
@@ -150,7 +145,7 @@ app.get('/login', function (request, response) {
 });
 
 //Return a list of years a certain instructor has taught sections
-app.get('/years', function (request, response) {
+app.get('/years', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
    var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
@@ -167,9 +162,9 @@ app.get('/years', function (request, response) {
    var queryParams = [instructorID];
 
    //Execute the query
-   executeQuery(response, config, queryText, queryParams, function (result) {
+   executeQuery(response, config, queryText, queryParams, function(result) {
       var years = []; //Put the rows from the query into json format
-      for (row in result.rows) {
+      for(row in result.rows) {
          years.push(result.rows[row].year);
       }
       var jsonReturn = {
@@ -180,7 +175,7 @@ app.get('/years', function (request, response) {
 });
 
 //Return a list of seasons a user has attended during a certain year
-app.get('/seasons', function (request, response) {
+app.get('/seasons', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
    var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
@@ -193,17 +188,16 @@ app.get('/seasons', function (request, response) {
    var userID = request.query.userid;
    var userRole = request.query.userRole;
    var year = request.query.year;
-
    var queryText;
    var queryParams;
 
    //Set the query
    var queryParams = [userID, year];
 
-   if (userRole == 'alpha_GB_Instructor') {
+   if(userRole == 'alpha_GB_Instructor') {
       queryText = 'SELECT Order, Name FROM getInstructorSeasons($1, $2);';
    }
-   else if (userRole == 'alpha_GB_Student') {
+   else if(userRole == 'alpha_GB_Student') {
       queryText = 'SELECT Order, Name FROM getStudentSeasons($1, $2);';
    }
    else {
@@ -211,9 +205,9 @@ app.get('/seasons', function (request, response) {
    }
 
    //Execute the query
-   executeQuery(response, config, queryText, queryParams, function (result) {
+   executeQuery(response, config, queryText, queryParams, function(result) {
       var seasons = []; //Put the rows from the query into json format
-      for (row in result.rows) {
+      for(row in result.rows) {
          seasons.push(
             {
                "seasonorder": result.rows[row].seasonorder,
@@ -229,7 +223,7 @@ app.get('/seasons', function (request, response) {
 });
 
 //Returns a list of courses an instructor has taugh in a certain year
-app.get('/courses', function (request, response) {
+app.get('/courses', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
    var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
@@ -245,9 +239,9 @@ app.get('/courses', function (request, response) {
    var queryText = 'SELECT Course FROM gradebook.getInstructorCourses($1, $2, $3);';
    var queryParams = [instructorID, year, seasonOrder];
 
-   executeQuery(response, config, queryText, queryParams, function (result) {
+   executeQuery(response, config, queryText, queryParams, function(result) {
       var courses = [];
-      for (row in result.rows) {
+      for(row in result.rows) {
          courses.push(result.rows[row].course);
       }
       var jsonReturn = {
@@ -259,7 +253,7 @@ app.get('/courses', function (request, response) {
 });
 
 //Returns a list of sesctions an instructor taught in a certain term
-app.get('/sections', function (request, response) {
+app.get('/sections', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
    var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
@@ -276,9 +270,9 @@ app.get('/sections', function (request, response) {
    var queryText = 'SELECT SectionID, SectionNumber FROM gradebook.getInstructorSections($1, $2, $3, $4);';
    var queryParams = [instructorID, year, seasonOrder, courseNumber];
 
-   executeQuery(response, config, queryText, queryParams, function (result) {
+   executeQuery(response, config, queryText, queryParams, function(result) {
       var sections = [];
-      for (row in result.rows) {
+      for(row in result.rows) {
          sections.push(
             {
                "sectionid": result.rows[row].sectionid,
@@ -294,7 +288,7 @@ app.get('/sections', function (request, response) {
 });
 
 //Return a table containing the attendance for a single section
-app.get('/attendance', function (request, response) {
+app.get('/attendance', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
    var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
@@ -315,13 +309,13 @@ app.get('/attendance', function (request, response) {
 
    //Execute the attendance description query first
    //attnStatusRes will hold the table containg the code descriptions
-   executeQuery(response, config, queryTextAttnDesc, null, function (attnStatusRes) {
+   executeQuery(response, config, queryTextAttnDesc, null, function(attnStatusRes) {
       //Then execute the query to get attendance data
-      executeQuery(response, config, queryText, queryParams, function (result) {
+      executeQuery(response, config, queryText, queryParams, function(result) {
          //Check if any attendance data was returned from the DB.  One header row is
          //always returned, so if the result contains only one row, then
          //no attendance data was returned
-         if (result.rows.length == 1) {
+         if(result.rows.length == 1) {
             response.status(500).send('500 - No Attenance Records');
             return;
          }
@@ -339,14 +333,14 @@ app.get('/attendance', function (request, response) {
          var monthSpanWidths = []; //Stores the span associated with each month
          var currentSpanWidth = 1; //Width of the current span
 
-         for (i = 3; i < rowLen; i++) { //For each date in the date row
+         for(i = 3; i < rowLen; i++) { //For each date in the date row
             splitDate = dateRow[i].split('-');
-            if (splitDate[0] > maxMonth) { //If the month part is a new month
+            if(splitDate[0] > maxMonth) { //If the month part is a new month
                maxMonth = splitDate[0];
                months += ',' + monthNames[splitDate[0] - 1]; //Add it to the csv
-               if (currentSpanWidth > 0) { //Set the span width of the current month cell
+               if(currentSpanWidth > 0) { //Set the span width of the current month cell
                   //Also include the col. number with the span width
-                  monthSpanWidths.push({ 'col': i, 'width': currentSpanWidth });
+                  monthSpanWidths.push({'col': i, 'width': currentSpanWidth});
                   currentSpanWidth = 1;
                }
             }
@@ -355,48 +349,48 @@ app.get('/attendance', function (request, response) {
             }
             days += ',' + splitDate[1]; //Add day to the day row
          }
-         if (currentSpanWidth > 0) { //Add the last month span
-            monthSpanWidths.push({ 'col': i, 'width': currentSpanWidth });
+         if(currentSpanWidth > 0) { //Add the last month span
+            monthSpanWidths.push({'col': i, 'width': currentSpanWidth});
          }
          //Add the month and day rows to the csv rows
          var resultSplitDates = result.rows.slice(1);
-         resultSplitDates.unshift({ attendancecsvwithheader: days });
-         resultSplitDates.unshift({ attendancecsvwithheader: months });
+         resultSplitDates.unshift({attendancecsvwithheader: days});
+         resultSplitDates.unshift({attendancecsvwithheader: months});
 
          //Execute for each row in the result
-         resultSplitDates.forEach(function (row) {
+         resultSplitDates.forEach(function(row) {
             //Add table row for each result row
             table += '<tr>';
             var splitRow = row.attendancecsvwithheader.split(','); //Split the csv field
             var rowLen = splitRow.length;
             var spanIndex = 0;
 
-            for (cell = 0; cell < rowLen; cell++) { //For each cell in the current row
+            for(cell = 0; cell < rowLen; cell++) { //For each cell in the current row
                var title = '';
                var style = '';
                var spanWidth = 1;
                //Correctly format student names (lname, fnmame mname)
                var cellContents = splitRow[cell];
-               if (splitRow[0] == '') {
+               if(splitRow[0] == '') {
                   spanWidth = monthSpanWidths[spanIndex].width;
                   spanIndex++;
                }
-               if (splitRow[0] != '' && cell == 0) {
+               if(splitRow[0] != '' && cell == 0) {
                   cellContents = splitRow[cell] + ', ' + splitRow[cell + 1] + ' ' + splitRow[cell + 2];
                   cell += 2;
                }
-               if (splitRow[0] != '' && cell > 2) {
+               if(splitRow[0] != '' && cell > 2) {
                   //Find the matching code description
                   //the some() method allows break-like behavior using return true
-                  attnStatusRes.rows.some(function (row) {
-                     if (row.status == cellContents) {
+                  attnStatusRes.rows.some(function(row) {
+                     if(row.status == cellContents) {
                         title = row.description;
                         return true;
                      }
                   });
                   //Check if this column is the first in the month, and add a left border
-                  monthSpanWidths.some(function (row) {
-                     if (row.col == cell) {
+                  monthSpanWidths.some(function(row) {
+                     if(row.col == cell) {
                         style = 'border-left: 2px solid #e0e0e0;';
                         return true;
                      }
@@ -405,10 +399,10 @@ app.get('/attendance', function (request, response) {
                //Generate table row based on non-empty properties
                table += '<td' + ' colspan=' + spanWidth;
                //Only add title/style properties if they are not empty
-               if (title != '') {
+               if(title != '') {
                   table += ' title="' + title + '"';
                }
-               if (style != '') {
+               if(style != '') {
                   table += ' style="' + style + '"';
                }
                table += ' >' + cellContents + '</td>';
@@ -423,7 +417,7 @@ app.get('/attendance', function (request, response) {
    });
 });
 
-app.use(function (err, req, res, next) {
+app.use(function(err, req, res, next) {
    console.error(err);
    res.status(500).send('Internal Server Error');
 });
