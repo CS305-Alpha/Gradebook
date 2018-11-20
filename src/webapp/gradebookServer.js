@@ -130,7 +130,7 @@ app.get('/login', function(request, response) {
    var instructorEmail = request.query.instructoremail.trim();
 
    //Set the query text
-   var queryText = 'SELECT ID, FName, MName, LName, Department FROM gradebook.getInstructor($1);';
+   var queryText = 'SELECT ID, FName, MName, LName, Department FROM getInstructor($1);';
    var queryParams = [instructorEmail];
 
    //Execute the query
@@ -149,7 +149,7 @@ app.get('/login', function(request, response) {
    });
 });
 
-//Return a list of years a certain instructor has taught sections
+//Return a list of years a certain user has taught sections
 app.get('/years', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
@@ -160,11 +160,26 @@ app.get('/years', function(request, response) {
       passwordText, request.query.host, request.query.port);
 
    //Get the params from the url
-   var instructorID = request.query.instructorid;
+   var userID = request.query.userID;
+   var userRole = request.query.userRole; //assuming this is provided at the UI level
+   var queryText;
 
    //Set the query text
-   var queryText = 'SELECT Year FROM gradebook.getInstructorYears($1);';
-   var queryParams = [instructorID];
+   var queryParams;
+   if (userRole == 'alpha_GB_Instructor')
+   {
+      queryText = 'SELECT Year FROM getInstructorYears($1);';
+      queryParams = [userID];
+   } 
+   else if (userRole == 'alpha_GB_Student')
+   {
+      queryText = 'SELECT Year FROM getYearsAsStudent();';
+   }
+   else
+   {
+      queryText = 'SELECT DISTINCT year FROM term;';
+   }
+
 
    //Execute the query
    executeQuery(response, config, queryText, queryParams, function(result) {
@@ -194,7 +209,7 @@ app.get('/seasons', function(request, response) {
    var year = request.query.year;
 
    //Set the query text
-   var queryText = 'SELECT SeasonOrder, SeasonName FROM gradebook.getInstructorSeasons($1, $2);';
+   var queryText = 'SELECT SeasonOrder, SeasonName FROM getInstructorSeasons($1, $2);';
    var queryParams = [instructorID, year];
 
    //Execute the query
@@ -229,7 +244,7 @@ app.get('/courses', function(request, response) {
    var year = request.query.year;
    var seasonOrder = request.query.seasonorder;
 
-   var queryText = 'SELECT Course FROM gradebook.getInstructorCourses($1, $2, $3);';
+   var queryText = 'SELECT Course FROM getInstructorCourses($1, $2, $3);';
    var queryParams = [instructorID, year, seasonOrder];
 
    executeQuery(response, config, queryText, queryParams, function(result) {
@@ -260,7 +275,7 @@ app.get('/sections', function(request, response) {
    var seasonOrder = request.query.seasonorder;
    var courseNumber = request.query.coursenumber;
 
-   var queryText = 'SELECT SectionID, SectionNumber FROM gradebook.getInstructorSections($1, $2, $3, $4);';
+   var queryText = 'SELECT SectionID, SectionNumber FROM getInstructorSections($1, $2, $3, $4);';
    var queryParams = [instructorID, year, seasonOrder, courseNumber];
 
    executeQuery(response, config, queryText, queryParams, function(result) {
@@ -294,11 +309,11 @@ app.get('/attendance', function(request, response) {
    var sectionID = request.query.sectionid;
 
    //Set the query text and package the parameters in an array
-   var queryText = 'SELECT AttendanceCSVWithHeader FROM gradebook.getAttendance($1);';
+   var queryText = 'SELECT AttendanceCSVWithHeader FROM getAttendance($1);';
    var queryParams = [sectionID];
 
    //Setup the second query, to get the attendance code description table
-   var queryTextAttnDesc = 'SELECT Status, Description FROM gradebook.AttendanceStatus';
+   var queryTextAttnDesc = 'SELECT Status, Description FROM AttendanceStatus';
 
    //Execute the attendance description query first
    //attnStatusRes will hold the table containg the code descriptions
