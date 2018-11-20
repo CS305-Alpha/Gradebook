@@ -76,7 +76,7 @@ $$
    SELECT ID 
    FROM Term
    WHERE Year = $1
-   AND Season = $2;
+   AND Season = (SELECT "Order" FROM getSeason($2));
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -98,9 +98,9 @@ GRANT EXECUTE ON FUNCTION getTermID(year NUMERIC(4,0), season CHAR(1))
 CREATE OR REPLACE FUNCTION getTermStart(termID INT)
    RETURNS DATE AS
 $$
-    SELECT StartDate 
-    FROM Term
-    WHERE ID = $1;
+   SELECT StartDate 
+   FROM Term
+   WHERE ID = $1;
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -120,9 +120,9 @@ GRANT EXECUTE ON FUNCTION getTermStart(termID INT) TO alpha_GB_Webapp,
 --termID. Returns NULL if termID does not refer to a known Term.
 CREATE OR REPLACE FUNCTION getTermEnd(termID INT) RETURNS DATE AS
 $$
-    SELECT EndDate 
-    FROM Term
-    WHERE ID = $1;
+   SELECT EndDate 
+   FROM Term
+   WHERE ID = $1;
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -144,13 +144,13 @@ GRANT EXECUTE ON FUNCTION getTermEnd(termID INT) TO alpha_GB_Webapp,
 CREATE OR REPLACE FUNCTION getSignificantDates(termID INT)
 RETURNS TABLE (Date DATE,
                Name VARCHAR(30),
-               ClosureStatus CHAR(1),
+               ClassesHeld BOOLEAN,
                Reason VARCHAR(30)
               ) AS
 $$
-    SELECT *
-    FROM SignificantDate
-    WHERE Term = $1;
+   SELECT Date, Name, ClassesHeld, Reason
+   FROM SignificantDate
+   WHERE Term = $1;
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -172,9 +172,9 @@ GRANT EXECUTE ON FUNCTION getSignificantDates(termID INT) TO alpha_GB_Webapp,
 --offered in the Term and NULL if termID does not refer to a known Term.
 CREATE OR REPLACE FUNCTION getTermCourseCount(termID INT) RETURNS INT AS
 $$
-    SELECT COUNT(DISTINCT Course)
-    FROM Section
-    WHERE Term = $1;
+   SELECT COUNT(DISTINCT Course)::INT --safe to assume < 2^31 courses
+   FROM Section
+   WHERE Term = $1;
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -196,9 +196,9 @@ GRANT EXECUTE ON FUNCTION getTermCourseCount(termID INT) TO alpha_GB_Webapp,
 --are offered in the Term and NULL if termID does not refer to a known Term.
 CREATE OR REPLACE FUNCTION getTermSectionCount(termID INT) RETURNS INT AS
 $$
-    SELECT COUNT(Section)
-    FROM Section
-    WHERE Term = $1;
+   SELECT COUNT(Section)::INT --safe to assume < 2^31 sections
+   FROM Section
+   WHERE Term = $1;
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -219,9 +219,14 @@ GRANT EXECUTE ON FUNCTION getTermSectionCount(termID INT) TO alpha_GB_Webapp,
 --to a known Term.
 CREATE OR REPLACE FUNCTION getTermInstructorCount(termID INT) RETURNS INT AS
 $$
-   SELECT COUNT(*) 
-   FROM (SELECT DISTINCT Instructor1, Instructor2, Instructor3 FROM Section);
-$$ LANGUAGE plpgsql
+   SELECT COUNT(*)::INT --safe to assume < 2^31 instructors
+   FROM (
+      SELECT Instructor1 FROM Section WHERE Term = $1
+      UNION
+      SELECT Instructor2 FROM Section WHERE TERM = $1
+      UNION
+      SELECT Instructor3 FROM Section WHERE Term = $1 ) AS TermInstructors
+$$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
    STABLE
@@ -288,13 +293,13 @@ RETURNS TABLE (ID INT,
                StartDate DATE,
                EndDate DATE,
                MidtermDate DATE,
-               Instructor1 INT,
-               Instructor2 INT,
-               Instructor3 INT
+               Instructor1 VARCHAR,
+               Instructor2 VARCHAR,
+               Instructor3 VARCHAR
               ) AS
 $$
-   SELECT id, term, course, sectionnumber, CRN, schedule, location, startdate,
-      enddate, midtermdate, getInstructorName(instructor1), 
+   SELECT id, term, course, sectionnumber, CRN, title, schedule, location,
+      startdate, enddate, midtermdate, getInstructorName(instructor1), 
       getInstructorName(instructor2), getInstructorName(instructor3)
    FROM section
    WHERE term = $1;
@@ -318,9 +323,9 @@ GRANT EXECUTE ON FUNCTION getTermSections(termID INT) TO alpha_GB_Webapp,
 --refer to a known Term.
 CREATE OR REPLACE FUNCTION getTermStudentCount(termID INT) RETURNS INT AS
 $$
-   SELECT COUNT(SELECT DISTINCT e.student 
+   SELECT COUNT(DISTINCT e.student)::INT --safe to assume < 2^31 students
    FROM enrollee e JOIN section s ON e.section = s.id
-   WHERE s.term = $1);
+   WHERE s.term = $1;
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -349,10 +354,10 @@ RETURNS TABLE(Number VARCHAR(8),
 $$
    SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
                          COALESCE(', ' || getInstructorName(instructor2),' ') ||
-                         COALESCE(', ' || getInstructorName(instructor3))),
-                         startdate, EndDate
+                         COALESCE(', ' || getInstructorName(instructor3)),
+                         s.startdate, s.endDate
    FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
-   SORT BY t.year;
+   ORDER BY t.year;
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -381,8 +386,8 @@ RETURNS TABLE(Number VARCHAR(8),
 $$
    SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
                          COALESCE(', ' || getInstructorName(instructor2),' ') ||
-                         COALESCE(', ' || getInstructorName(instructor3))),
-                         startdate, EndDate
+                         COALESCE(', ' || getInstructorName(instructor3)),
+                         s.startdate, s.endDate
    FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
    WHERE t.year = $1;
 $$ LANGUAGE sql
@@ -413,8 +418,8 @@ RETURNS TABLE(Number VARCHAR(8),
 $$
    SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
                          COALESCE(', ' || getInstructorName(instructor2),' ') ||
-                         COALESCE(', ' || getInstructorName(instructor3))),
-                         startdate, EndDate
+                         COALESCE(', ' || getInstructorName(instructor3)),
+                         s.startdate, s.endDate
    FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
    WHERE t.id = $1;
 $$ LANGUAGE sql

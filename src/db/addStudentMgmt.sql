@@ -21,12 +21,30 @@
 
 START TRANSACTION;
 
+
 --Suppress messages below WARNING level for the duration of this script
 SET LOCAL client_min_messages TO WARNING;
 
 --Set schema to reference in functions and tables, pg_temp is specified
 -- last for security purposes
 SET LOCAL search_path TO 'alpha', 'pg_temp';
+
+
+--Returns the ID for the row in the Student table where the row's schoolIssuedID
+--attribute matches SESSION_USER. Returns NULL if no such record found.
+CREATE OR REPLACE FUNCTION getMyStudentID() RETURNS INT AS
+$$
+   SELECT id FROM student WHERE schoolissuedid like current_user;
+$$ LANGUAGE sql
+   SECURITY DEFINER
+   SET search_path FROM CURRENT
+   STABLE;
+
+ALTER FUNCTION getMyStudentID() OWNER TO CURRENT_USER;
+
+REVOKE ALL ON FUNCTION getMyStudentID() FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION getMyStudentID() TO alpha_GB_Student;
 
 
 --Given Gradebook's identifier for a student, returns a table listing the years
@@ -110,29 +128,6 @@ REVOKE ALL ON FUNCTION getStudentSeasons(studentID INT, year NUMERIC(4,0))
 GRANT EXECUTE ON FUNCTION getStudentSeasons(studentID INT, year NUMERIC(4,0))
 TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
 alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
-
-
---Returns a table listing the seasons in which the student specified by
---SESSION_USER has been enrolled in at least one section in the given year.
---Returns 0 rows if student has not been enrolled in any sections, or NULL if
---the SESSION_USER is not a student.
-CREATE OR REPLACE FUNCTION getSeasonsAsStudent(year NUMERIC(4,0))
-   RETURNS TABLE(SeasonOrder Numeric(1,0),
-               SeasonName VARCHAR(20)
-               ) AS
-$$
-   SELECT getStudentSeasons(getMyStudentID());
-$$ LANGUAGE sql
-   SECURITY DEFINER
-   SET search_path FROM CURRENT
-   STABLE;
-
-ALTER FUNCTION getSeasonsAsStudent(year NUMERIC(4,0)) OWNER TO CURRENT_USER;
-
-REVOKE ALL ON FUNCTION getSeasonsAsStudent(year NUMERIC(4,0)) FROM PUBLIC;
-
-GRANT EXECUTE ON FUNCTION getSeasonsAsStudent(year NUMERIC(4,0)) TO
-   alpha_GB_Student;
 
 
 --Adds a student to the student table and creates database role for new student
@@ -327,23 +322,6 @@ GRANT EXECUTE ON FUNCTION searchStudent(fname VARCHAR(50), mName VARCHAR(50),
 
 
 --Returns the ID for the row in the Student table where the row's schoolIssuedID
---attribute matches SESSION_USER. Returns NULL if no such record found.
-CREATE OR REPLACE FUNCTION getMyStudentID() RETURNS INT AS
-$$
-   SELECT id FROM student WHERE schoolissuedid like current_user;
-$$ LANGUAGE sql
-   SECURITY DEFINER
-   SET search_path FROM CURRENT
-   STABLE;
-
-ALTER FUNCTION getMyStudentID() OWNER TO CURRENT_USER;
-
-REVOKE ALL ON FUNCTION getMyStudentID() FROM PUBLIC;
-
-GRANT EXECUTE ON FUNCTION getMyStudentID() TO alpha_GB_Student;
-
-
---Returns the ID for the row in the Student table where the row's schoolIssuedID
 --attribute matches the argument schoolIssuedID, or where the row's email
 --attribute matches the argument email.
 CREATE OR REPLACE FUNCTION getStudentIDByIssuedID(schoolIssuedID VARCHAR(50))
@@ -397,21 +375,24 @@ GRANT EXECUTE ON FUNCTION getStudentIDbyEmail(email VARCHAR(319))
 --Changes midtermGradeAwarded in a row of the Enrollee table where the row's
 --student attribute matches the argument student, and where the student is in
 --the section that the instructor teaches.
-CREATE OR REPLACE FUNCTION assignMidtermGrade(student INT, sectionID INT
+CREATE OR REPLACE FUNCTION assignMidtermGrade(student INT, sectionID INT,
                                               midtermGradeAwarded VARCHAR(2)
                                              )
    RETURNS VOID AS
 $$
-   IF NOT EXISTS 
+BEGIN
+   IF NOT EXISTS(
       SELECT * FROM section s
       WHERE s.id = $2 AND getInstructorID(SESSION_USER)
-                           IN (instructor1, instructor2, instructor3)
+                           IN (instructor1, instructor2, instructor3))
    THEN
       RAISE EXCEPTION 'Current user is not an instructor of specified student';
    ELSE
-      UPDATE enrollee
-      SET midtermgradeawarded = $3
-      WHERE student = $1;
+      UPDATE enrollee e
+      SET e.midtermgradeawarded = $3
+      WHERE e.student = $1;
+   END IF;
+END;
 $$ LANGUAGE plpgsql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -436,16 +417,19 @@ CREATE OR REPLACE FUNCTION assignFinalGrade(student INT, sectionID INT,
                                            )
    RETURNS VOID AS
 $$
-   IF NOT EXISTS
+BEGIN
+   IF NOT EXISTS(
       SELECT * FROM section s
       WHERE s.id = $2 AND getInstructorID(SESSION_USER)
-                           IN (instructor1, instructor2, instructor3)
+                           IN (instructor1, instructor2, instructor3))
    THEN
       RAISE EXCEPTION 'Current user is not an instructor of specified student';
    ELSE
-      UPDATE enrollee
-      SET finalgradeawarded = $3
-      WHERE student = $1;
+      UPDATE enrollee e
+      SET e.finalgradeawarded = $3
+      WHERE e.student = $1;
+   END IF;
+END;
 $$ LANGUAGE plpgsql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -492,25 +476,16 @@ $$ LANGUAGE sql
    STABLE
    RETURNS NULL ON NULL INPUT;
 
-ALTER FUNCTION getStudentSections(studentID INT,
-                                       year NUMERIC(4,0),
-                                       seasonOrder NUMERIC(1,0)
-                                          )
-   OWNER TO alpha;
+ALTER FUNCTION getStudentSections(studentID INT, year NUMERIC(4,0),
+   seasonOrder NUMERIC(1,0)) OWNER TO alpha;
 
 REVOKE ALL ON FUNCTION getStudentSections(studentID INT,
-                                             year NUMERIC(4,0),
-                                             seasonOrder NUMERIC(1,0)
-                                             )
-   FROM PUBLIC;
+   year NUMERIC(4,0), seasonOrder NUMERIC(1,0)) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION getStudentSections(studentID INT,
-                                                year NUMERIC(4,0),
-                                                seasonOrder NUMERIC(1,0)
-                                                )
-   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
-   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin,
-   alpha_GB_Student;
+   year NUMERIC(4,0), seasonOrder NUMERIC(1,0)) TO alpha_GB_Webapp,
+   alpha_GB_Instructor, alpha_GB_Registrar, alpha_GB_RegistrarAdmin,
+   alpha_GB_Admissions, alpha_GB_DBAdmin, alpha_GB_Student;
 
 
 --function to get the section number(s) of a course a student has attended
@@ -532,29 +507,37 @@ $$ LANGUAGE sql
    STABLE
    RETURNS NULL ON NULL INPUT;
 
+ALTER FUNCTION getStudentSections(studentID INT, year NUMERIC(4,0),
+   seasonOrder NUMERIC(1,0), courseNumber VARCHAR(8)) OWNER TO alpha;
 
-ALTER FUNCTION getStudentSections(studentID INT,
-                                          year NUMERIC(4,0),
-                                          seasonOrder NUMERIC(1,0),
-                                          courseNumber VARCHAR(8)
-                                          )
-   OWNER TO alpha;
+REVOKE ALL ON FUNCTION getStudentSections(studentID INT, year NUMERIC(4,0),
+   seasonOrder NUMERIC(1,0), courseNumber VARCHAR(8)) FROM PUBLIC;
 
-REVOKE ALL ON FUNCTION getStudentSections(studentID INT,
-                                          year NUMERIC(4,0),
-                                          seasonOrder NUMERIC(1,0),
-                                          courseNumber VARCHAR(8)
-                                          )
-   FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION getStudentSections(studentID INT, year NUMERIC(4,0),
+   seasonOrder NUMERIC(1,0), courseNumber VARCHAR(8)) TO alpha_GB_Webapp,
+   alpha_GB_Instructor, alpha_GB_Registrar, alpha_GB_RegistrarAdmin,
+   alpha_GB_Admissions, alpha_GB_DBAdmin, alpha_GB_Student;
 
-GRANT EXECUTE ON FUNCTION getStudentSections(studentID INT,
-                                             year NUMERIC(4,0),
-                                          seasonOrder NUMERIC(1,0),
-                                          courseNumber VARCHAR(8)
-                                          )
-   TO alpha_GB_Webapp, alpha_GB_Instructor, alpha_GB_Registrar, 
-   alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin,
+--Returns a table listing the seasons in which the student specified by
+--SESSION_USER has been enrolled in at least one section in the given year.
+--Returns 0 rows if student has not been enrolled in any sections, or NULL if
+--the SESSION_USER is not a student.
+CREATE OR REPLACE FUNCTION getSeasonsAsStudent(year NUMERIC(4,0))
+   RETURNS TABLE(SeasonOrder Numeric(1,0),
+                 SeasonName VARCHAR(20)
+                ) AS
+$$
+   SELECT getStudentSeasons(getMyStudentID(), $1);
+$$ LANGUAGE sql
+   SECURITY DEFINER
+   SET search_path FROM CURRENT
+   STABLE;
+
+ALTER FUNCTION getSeasonsAsStudent(year NUMERIC(4,0)) OWNER TO CURRENT_USER;
+
+REVOKE ALL ON FUNCTION getSeasonsAsStudent(year NUMERIC(4,0)) FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION getSeasonsAsStudent(year NUMERIC(4,0)) TO
    alpha_GB_Student;
-
 
 COMMIT;
