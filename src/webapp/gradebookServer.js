@@ -313,7 +313,6 @@ app.get('/sections', function(request, response) {
    });
 });
 
-
 //Returns an array of dates for a given section id.  Omits dates when classes are
 // not held.
 app.get('/sectionschedule', function(request, response) {
@@ -355,6 +354,54 @@ app.get('/sectionschedule', function(request, response) {
    });
 });
 
+app.get('/sectionreport', function(request, response) {
+   //Decrypt the password recieved from the client.  This is a temporary development
+   //feature, since we don't have ssl set up yet
+   var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
+
+   //Connnection parameters for the Postgres client recieved in the request
+   var config = createConnectionParams(request.query.user, request.query.database,
+      passwordText, request.query.host, request.query.port);
+
+   var year = request.query.year;
+   var seasonCode = request.query.season;
+   var limit = request.query.limit;
+   var offset = request.query.offset;
+
+   var queryText = "SELECT getTermCourseCount(getTermID($1, $2)) AS CourseCount, " +
+                    "getTermSectionCount(getTermID($1, $2)) AS SectionCount, " +
+                    "getTermInstructorCount(getTermID($1, $2)) AS InstructorCount, " +
+                    "getTermStudentCount(getTermID($1, $2)) AS StudentCount;";
+   var queryParams = [year, seasonCode];
+
+   executeQuery(response, config, queryText, queryParams, function(result) {
+      var courseCount = result.rows[0].coursecount;
+      var sectionCount = result.rows[0].sectioncount;
+      var instructorCount = result.rows[0].instructorcount;
+      var studentCount = result.rows[0].studentcount;
+
+      queryText = "SELECT * FROM getTermSectionReport(getTermID($1, $2)) " +
+                  "ORDER BY Course ASC, SectionNumber ASC LIMIT $3 OFFSET $4;";
+      queryParams = [year, seasonCode, limit, offset];
+
+      executeQuery(response, config, queryText, queryParams, function(result) {
+         var jsonReturn = {
+            "CourseCount": courseCount,
+            "SectionCount": sectionCount,
+            "InstructorCount": instructorCount,
+            "StudentCount": studentCount,
+            "Sections": []
+         };
+
+         for (row in result.rows) {
+            jsonReturn.Sections.push(row);
+         }
+
+         response.send(JSON.stringify(jsonReturn));
+      });
+   });
+
+});
 
 //Return a table containing the attendance for a single section
 app.get('/attendance', function(request, response) {
