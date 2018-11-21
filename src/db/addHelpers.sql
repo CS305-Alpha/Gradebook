@@ -50,8 +50,26 @@ BEGIN
 
    RETURN TRUE;
 END;
+$$ LANGUAGE plpgsql
+   IMMUTABLE
+   RETURNS NULL ON NULL INPUT;
+
+--Given a VARCHAR of any length, removes characters that are not allowed in
+-- schoolIssuedIDs and cuts the string to 50 characters
+CREATE OR REPLACE FUNCTION makeValidIssuedID(ID VARCHAR) RETURNS VARCHAR(50) AS
 $$
-   LANGUAGE plpgsql;
+BEGIN
+   IF LEFT(ID, 1) !~ '[a-zA-Z_]' THEN --add _ if first char if not a letter or _
+      RETURN STRING_AGG(ARRAY_TO_STRING(regexp_matches, ''), '')::VARCHAR(50)
+      FROM REGEXP_MATCHES('_' || $1, '[a-zA-Z0-9_$]+', 'g');
+   ELSE
+      RETURN STRING_AGG(ARRAY_TO_STRING(regexp_matches, ''), '')::VARCHAR(50)
+      FROM REGEXP_MATCHES($1, '[a-zA-Z0-9_$]+', 'g');
+   END IF;
+END;
+$$ LANGUAGE plpgsql
+   IMMUTABLE
+   RETURNS NULL ON NULL INPUT;
 
 
 COMMIT;
