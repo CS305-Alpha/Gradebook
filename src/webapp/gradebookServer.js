@@ -380,7 +380,7 @@ app.get('/sectionreport', function(request, response) {
       var instructorCount = result.rows[0].instructorcount;
       var studentCount = result.rows[0].studentcount;
 
-      queryText = "SELECT * FROM getTermSectionReport(getTermID($1, $2)) " +
+      queryText = "SELECT * FROM getTermSectionsReport(getTermID($1, $2)) " +
                   "ORDER BY Course ASC, SectionNumber ASC LIMIT $3 OFFSET $4;";
       queryParams = [year, seasonCode, limit, offset];
 
@@ -394,7 +394,7 @@ app.get('/sectionreport', function(request, response) {
          };
 
          for (row in result.rows) {
-            jsonReturn.Sections.push(row);
+            jsonReturn.Sections.push(result.rows[row]);
          }
 
          response.send(JSON.stringify(jsonReturn));
