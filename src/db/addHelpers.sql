@@ -40,13 +40,12 @@ SET LOCAL search_path TO 'alpha', 'pg_temp';
 CREATE OR REPLACE FUNCTION isValidSQLID(ID VARCHAR) RETURNS BOOLEAN AS
 $$
 BEGIN
-   IF LENGTH(ID) > 63 THEN RETURN FALSE;
-   END IF;
-
-   IF LEFT(ID, 1) !~ '[a-zA-Z_]' THEN RETURN FALSE;
-   END IF;
-
-   IF ID ~ '[^a-zA-Z0-9_$]' THEN RETURN FALSE;
+   IF LENGTH(ID) > 63 --length cannot exceed 63 characters
+      THEN RETURN FALSE;
+   ELSIF LEFT(ID, 1) !~ '[a-zA-Z_]' --first char must be a letter or _
+      THEN RETURN FALSE;
+   ELSIF ID ~ '[^a-zA-Z0-9_$]' --remaining chars must be alphanumeric, _, or $
+      THEN RETURN FALSE;
    END IF;
 
    RETURN TRUE;
