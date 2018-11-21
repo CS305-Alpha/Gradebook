@@ -39,6 +39,36 @@ CREATE TEMPORARY TABLE IF NOT EXISTS RosterStaging
    Email VARCHAR(319)
 );
 
+--Creates student ids that match the scheme: namepart00000
+--Name part is an all lowercase version of a student's name part, last
+-- name (lname) is used first, and falls back to mName than fName if the name
+-- part is null or an empty string
+--00000 represents a sequence of numbers, which increments based on previously
+-- assigned IDs (scans table rather than maintaining a counter)
+CREATE OR REPLACE FUNCTION pg_temp.generateStudentIssuedID(fName TEXT,
+   mName TEXT, lName TEXT) RETURNS VARCHAR(50) AS
+$$
+BEGIN
+   IF $3 IS NOT NULL OR TRIM($3) <> '' THEN
+      RETURN (
+         SELECT LOWER(makeValidIssuedID($3)) || LPAD(COUNT(*)::VARCHAR, 5, '0')
+         FROM Student S WHERE S.SchoolIssuedID ILIKE makeValidIssuedID($3) || '%');
+   ELSIF $2 IS NOT NULL OR TRIM($2) <> '' THEN
+      RETURN (
+         SELECT LOWER(makeValidIssuedID(2)) || LPAD(COUNT(*)::VARCHAR, 5, '0')
+         FROM Student S WHERE S.SchoolIssuedID ILIKE makeValidIssuedID($2) || '%');
+   ELSIF $1 IS NOT NULL OR TRIM($1) <> '' THEN
+      RETURN (
+         SELECT LOWER(makeValidIssuedID($1)) || LPAD(COUNT(*)::VARCHAR, 5, '0')
+         FROM Student S WHERE S.SchoolIssuedID ILIKE makeValidIssuedID($1) || '%');
+   ELSE
+      RETURN (
+         SELECT "student" || LPAD(COUNT(*)::VARCHAR, 5, '0')
+         FROM Student S WHERE S.SchoolIssuedID ILIKE 'student%');
+   END IF;
+END;
+$$ LANGUAGE plpgsql;
+
 
 --Function to import a roster currently in the rosterStaging table
 --param seasonIdentification is a season order, code, or name
@@ -55,16 +85,18 @@ $$
    --add students: if a student already exists, update selected fields
    -- assumes rosters are imported in chronological order so that updating
    -- info of an existing student reflects the most recent info for that student
-   INSERT INTO Student(FName, MName, LName, SchoolIssuedID, Email,
-                                 Major, Year
-                                )
-   SELECT r.FName, r.MName, r.LName, r.ID, r.email, r.Major, r.Class
-   FROM pg_temp.RosterStaging r
-   ON CONFLICT (SchoolIssuedID)
+   INSERT INTO Student(FName, MName, LName, SchoolIssuedID, Email, Year)
+   SELECT r.FName, r.MName, r.LName,
+      pg_temp.generateStudentIssuedID(r.FName, r.MName, r.LName), r.Email, r.Class
+   FROM pg_temp.RosterStaging r;
+   /* Commented out, but still need to find an alternative to address the
+   duplicate student problem.
+   ON CONFLICT (Email)
       DO UPDATE SET
          FName = EXCLUDED.FName, MName = EXCLUDED.MName,
-         LName = EXCLUDED.LName, Email = EXCLUDED.Email,
-         Major = EXCLUDED.Major, Year = EXCLUDED.Year;
+         LName = EXCLUDED.LName, SchoolIssuedID = EXCLUDED.SchoolIssuedID,
+         Email = EXCLUDED.Email, Year = EXCLUDED.Year;
+   */
 
    --determine info that is fixed for all enrollments in this import batch
    -- Section ID is fixed based on first four params
@@ -82,7 +114,7 @@ $$
       SELECT S.ID, f.SectionID, f.StartDate, r.Class, r.Major
       FROM FixedEnrollmentInfo f,
            pg_temp.RosterStaging r
-           JOIN Student S ON r.ID = S.SchoolIssuedID
+           JOIN Student S ON r.email = S.email
       ON CONFLICT DO NOTHING;
 
 $$ LANGUAGE SQL;
