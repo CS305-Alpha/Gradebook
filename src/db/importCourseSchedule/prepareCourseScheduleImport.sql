@@ -78,6 +78,36 @@ $$
    FROM LatestYear LY;
 $$ LANGUAGE sql;
 
+--Creates instructor ids that match the scheme: namepart0000
+--Name part is an all lowercase version of an instructor's name part, last
+-- name (lname) is used first, and falls back to mName than fName if the name
+-- part is null or an empty string
+--0000 represents a sequence of numbers, which increments based on previously
+-- assigned IDs (scans table rather than maintaining a counter)
+CREATE OR REPLACE FUNCTION pg_temp.generateInstructorIssuedID(fName TEXT,
+   mName TEXT, lName TEXT) RETURNS VARCHAR(50) AS
+$$
+BEGIN
+   IF $3 IS NOT NULL OR TRIM($3) <> '' THEN
+      RETURN (
+         SELECT LOWER(makeValidIssuedID($3)) || LPAD(COUNT(*)::VARCHAR, 4, '0')
+         FROM Instructor I WHERE I.SchoolIssuedID ILIKE makeValidIssuedID($3) || '%');
+   ELSIF $2 IS NOT NULL OR TRIM($2) <> '' THEN
+      RETURN (
+         SELECT LOWER(makeValidIssuedID(2)) || LPAD(COUNT(*)::VARCHAR, 4, '0')
+         FROM Instructor I WHERE I.SchoolIssuedID ILIKE makeValidIssuedID($2) || '%');
+   ELSIF $1 IS NOT NULL OR TRIM($1) <> '' THEN
+      RETURN (
+         SELECT LOWER(makeValidIssuedID($1)) || LPAD(COUNT(*)::VARCHAR, 4, '0')
+         FROM Instructor I WHERE I.SchoolIssuedID ILIKE makeValidIssuedID($1) || '%');
+   ELSE
+      RETURN (
+         SELECT "instructor" || LPAD(COUNT(*)::VARCHAR, 4, '0')
+         FROM Instructor I WHERE I.SchoolIssuedID ILIKE 'instructor%');
+   END IF;
+END;
+$$ LANGUAGE plpgsql;
+
 --Populates Term, Instructor, Course, Course_Section and Section_Instructor from
 -- the CourseScheduleStaging table.
 --importCouseSchedule() expects there to be one term of data in the table per execution.
@@ -123,14 +153,14 @@ BEGIN
    ON CONFLICT DO NOTHING;
 
    --Insert course into Course, concat subject || course to make 'Number'
-   INSERT INTO Course(Number, Title)
+   INSERT INTO Course(Number, DefaultTitle)
    SELECT DISTINCT ON (n) (Subject || Course) n, Title
    FROM pg_temp.CourseScheduleStaging
    WHERE NOT Subject IS NULL
    AND NOT Course IS NULL
    ON CONFLICT(Number)
       DO UPDATE
-         SET Title = EXCLUDED.Title;
+         SET DefaultTitle = EXCLUDED.DefaultTitle;
 
    --The first CTE inserts new instructors into Instructor, and RETURNS
    -- their full names for insertion into  Section table
@@ -159,7 +189,7 @@ BEGIN
          -- This method also ignores "names" like 'TBA'
          WHERE instructor LIKE '% %'
       )
-      INSERT INTO Instructor (FName, MName, LName)
+      INSERT INTO Instructor (FName, MName, LName, SchoolIssuedID)
       --Select the name parts from the array into the new Instructor row
       --EX. Name[1] = FName
       SELECT Name[1],
@@ -170,7 +200,16 @@ BEGIN
                SELECT string_agg(n, ' ')
                FROM unnest(Name[2:array_length(Name, 1) - 1]) n
               ) END,
-         Name[array_length(Name, 1)] --We place the last name part into LName
+         Name[array_length(Name, 1)], --We place the last name part into LName
+         pg_temp.generateInstructorIssuedID(Name[1], --same code is repeated from above
+                                             -- for call to generateInstructorIssuedID
+            CASE WHEN array_length(Name, 1) < 3 THEN NULL
+            ELSE ( --Because some names have more than 3 'name parts', we concat all
+                  --parts except the first and last into MName
+                  SELECT string_agg(n, ' ')
+                  FROM unnest(Name[2:array_length(Name, 1) - 1]) n
+               ) END,
+            Name[array_length(Name, 1)])
       FROM instructorSplitNames
       ON CONFLICT DO NOTHING
       RETURNING id, FName || ' ' || COALESCE(MName || ' ', '') || LName as FullName
@@ -184,10 +223,10 @@ BEGIN
       SELECT id, FName || ' ' || COALESCE(MName || ' ', '') || LName as FullName
       FROM Instructor
    )
-   INSERT INTO Section(CRN, Course, SectionNumber, Term, Schedule,
+   INSERT INTO Section(CRN, Course, SectionNumber, Title, Term, Schedule,
                                  StartDate, EndDate,
                                  Location, Instructor1, Instructor2, Instructor3)
-   SELECT oc.CRN, oc.Subject || oc.Course, oc.Section, t.ID, oc.Days,
+   SELECT oc.CRN, oc.Subject || oc.Course, oc.Section, oc.title, t.ID, oc.Days,
           --Split the date on - (dash)
           to_date($1 || '/' || (string_to_array(Date, '-'))[1], 'YYYY/MM/DD'),
           to_date($1 || '/' || (string_to_array(Date, '-'))[2], 'YYYY/MM/DD'),

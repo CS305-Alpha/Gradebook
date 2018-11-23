@@ -40,19 +40,36 @@ SET LOCAL search_path TO 'alpha', 'pg_temp';
 CREATE OR REPLACE FUNCTION isValidSQLID(ID VARCHAR) RETURNS BOOLEAN AS
 $$
 BEGIN
-   IF LENGTH(ID) > 63 THEN RETURN FALSE;
-   END IF;
-
-   IF LEFT(ID, 1) !~ '[a-zA-Z_]' THEN RETURN FALSE;
-   END IF;
-
-   IF ID ~ '[^a-zA-Z0-9_$]' THEN RETURN FALSE;
+   IF LENGTH(ID) > 63 --length cannot exceed 63 characters
+      THEN RETURN FALSE;
+   ELSIF LEFT(ID, 1) !~ '[a-zA-Z_]' --first char must be a letter or _
+      THEN RETURN FALSE;
+   ELSIF ID ~ '[^a-zA-Z0-9_$]' --remaining chars must be alphanumeric, _, or $
+      THEN RETURN FALSE;
    END IF;
 
    RETURN TRUE;
 END;
+$$ LANGUAGE plpgsql
+   IMMUTABLE
+   RETURNS NULL ON NULL INPUT;
+
+--Given a VARCHAR of any length, removes characters that are not allowed in
+-- schoolIssuedIDs and cuts the string to 50 characters
+CREATE OR REPLACE FUNCTION makeValidIssuedID(ID VARCHAR) RETURNS VARCHAR(50) AS
 $$
-   LANGUAGE plpgsql;
+BEGIN
+   IF LEFT(ID, 1) !~ '[a-zA-Z_]' THEN --add _ if first char if not a letter or _
+      RETURN STRING_AGG(ARRAY_TO_STRING(regexp_matches, ''), '')::VARCHAR(50)
+      FROM REGEXP_MATCHES('_' || $1, '[a-zA-Z0-9_$]+', 'g');
+   ELSE
+      RETURN STRING_AGG(ARRAY_TO_STRING(regexp_matches, ''), '')::VARCHAR(50)
+      FROM REGEXP_MATCHES($1, '[a-zA-Z0-9_$]+', 'g');
+   END IF;
+END;
+$$ LANGUAGE plpgsql
+   IMMUTABLE
+   RETURNS NULL ON NULL INPUT;
 
 
 COMMIT;

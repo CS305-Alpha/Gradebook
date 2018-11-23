@@ -375,6 +375,8 @@ BEGIN
       RAISE EXCEPTION 'SchoolIssuedID ''%'' is already assigned', TG_ARGV[0];
       END IF;
    END IF;
+
+   RETURN NEW;
 END;
 $$
    LANGUAGE plpgsql
@@ -389,18 +391,17 @@ DROP TRIGGER IF EXISTS triggerSchoolIDUniquenessUpdateStu ON Student;
 
 
 CREATE TRIGGER triggerSchoolIDUniquenessInsertIns BEFORE INSERT ON Instructor
-EXECUTE PROCEDURE checkUniqueSchoolID();
+FOR EACH ROW EXECUTE PROCEDURE checkUniqueSchoolID();
 
 CREATE TRIGGER triggerSchoolIDUniquenessInsertStu BEFORE INSERT ON Student
-EXECUTE PROCEDURE checkUniqueSchoolID();
+FOR EACH ROW EXECUTE PROCEDURE checkUniqueSchoolID();
 
 CREATE TRIGGER triggerSchoolIDUniquenessUpdateIns
 BEFORE UPDATE OF SchoolIssuedID ON Instructor
-EXECUTE PROCEDURE checkUniqueSchoolID();
+FOR EACH ROW EXECUTE PROCEDURE checkUniqueSchoolID();
 
 CREATE TRIGGER triggerSchoolIDUniquenessUpdateStu
 BEFORE UPDATE OF SchoolIssuedID ON Student
-EXECUTE PROCEDURE checkUniqueSchoolID();
-
+FOR EACH ROW EXECUTE PROCEDURE checkUniqueSchoolID();
 
 COMMIT;
