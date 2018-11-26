@@ -1,4 +1,13 @@
 /*
+gradebookServer.js - Gradebook
+
+Edited by Bruno DaSilva, Andrew Figueroa, and Jonathan Middleton (Team Alpha)
+ in support of CS305 coursework at Western Connecticut State University.
+
+Licensed to others under CC 4.0 BY-SA-NC
+
+This work is a derivative of Gradebook, originally developed by:
+
 Zach Boylan, Zaid Bhujwala, Andrew Figueroa, Steven Rollo
 
 Data Science & Systems Lab (DASSL), Western Connecticut State University
