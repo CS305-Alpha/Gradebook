@@ -224,8 +224,8 @@ app.get('/seasons', function(request, response) {
       queryText = 'SELECT SeasonOrder, SeasonName FROM getSeasonsAsStudent();';
    }
    else {
-      queryText = 'SELECT S."Order", S.Name FROM term T JOIN season S ON ' +
-                  'T.season = S."Order" WHERE T.Year = $1;';
+      queryText = 'SELECT S."Order" AS SeasonOrder, S.Name AS SeasonName FROM' + 
+                  ' term T JOIN season S ON T.season = S."Order" WHERE T.Year = $1;';
       queryParams = [year];
    }
 
