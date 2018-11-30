@@ -293,7 +293,10 @@ app.get('/sections', function(request, response) {
    var seasonOrder = request.query.seasonorder;
    var courseNumber = request.query.coursenumber;
 
-   var queryText = 'SELECT SectionID, SectionNumber FROM getInstructorSections($1, $2, $3, $4);';
+   var queryText = 'SELECT SectionID, Course, GIS.SectionNumber, Title,' +
+                   ' Schedule, Location, Instructors FROM' +
+                   ' getInstructorSections($1, $2, $3, $4) GIS,' +
+                   ' getSection(GIS.sectionID);';
    var queryParams = [instructorID, year, seasonOrder, courseNumber];
 
    executeQuery(response, config, queryText, queryParams, function(result) {
@@ -302,7 +305,12 @@ app.get('/sections', function(request, response) {
          sections.push(
             {
                "sectionid": result.rows[row].sectionid,
-               "sectionnumber": result.rows[row].sectionnumber
+               "sectioncourse": result.rows[row].course,
+               "sectionnumber": result.rows[row].sectionnumber,
+               "sectiontitle": result.rows[row].title,
+               "sectionschedule" : result.rows[row].schedule,
+               "sectionlocation" : result.rows[row].location,
+               "sectioninstructors" : result.rows[row].instructors
             }
          );
       }
