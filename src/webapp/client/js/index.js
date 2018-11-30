@@ -56,6 +56,18 @@ $(document).ready(function() {
 			$('#optionsArrow').html('keyboard_arrow_down');
 		}
 	});
+
+	$('#email').keyup(function(event) {
+		if (event.keyCode == 13) {
+			$('#btnLogin').click();
+		}
+	});
+
+	$('#passwordBox').keyup(function(event) {
+		if (event.keyCode == 13) {
+			$('#btnLogin').click();
+		}
+	});
 	
 	$('#btnLogin').click(function() {
 		dbInfo = getDBFields();
