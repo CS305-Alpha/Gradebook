@@ -22,8 +22,7 @@ Currently, a globally scoped variable is used to store login information.
  client cookies.
 */
 var dbInfo = {
-	"host":null, "port":null, "database":null, "user":null, "password":null,
-	 "instructorid":null
+	"host":null, "port":null, "database":null, "user":null, "password":null
 };
 var instInfo = { "fname":null, "mname":null, "lname": null, "dept":null };
 
@@ -59,11 +58,11 @@ $(document).ready(function() {
 	
 	$('#btnLogin').click(function() {
 		dbInfo = getDBFields();
-		var email = $('#email').val().trim();
-		if (dbInfo != null && email != '') {
-			serverLogin(dbInfo, email, function() {
+		var issuedID = $('#schoolIssuedID').val().trim();
+		if (dbInfo != null && issuedID != '') {
+			serverLogin(dbInfo, issuedID, function() {
 				//clear login fields and close DB Info box
-				$('#email').val('');
+				$('#schoolIssuedID').val('');
 				$('#passwordBox').val('');
 				$('#dbInfoBox').collapsible('close', 0);
 				$('#dbInfoArrow').html('keyboard_arrow_down');
@@ -121,7 +120,24 @@ $(document).ready(function() {
 		$('#rosterTab, #attnTab, #gradesTab, #reportsTab').css('display', 'none');
 		$('ul.tabs').tabs('select_tab', 'login');
 	});
+
+	$('#uploadBtn').click(function()
+	{
+		var file = document.getElementById('#rosterImport').files[0];
+		var reader = new FileReader();
+		reader.readAsText(file, 'UTF-8');
+		reader.onload = uploadRoster;
+	});
+
 });
+
+function uploadRoster(event){
+	var result = event.target.result;
+    var fileName = document.getElementById('#rosterImport').files[0].name;
+	
+	$.post('/importSectionRoster', { data: result, name: fileName }, showAlert("<p>Upload Successful.</p>"));
+
+};
 
 function showAlert(htmlContent) {
 	$('#genericAlertBody').html(htmlContent);
@@ -132,7 +148,7 @@ function getDBFields() {
 	var host = $('#host').val().trim();
 	var port = $('#port').val().trim();
 	var db = $('#database').val().trim();
-	var uname = $('#user').val().trim();
+	var uname = $('#schoolIssuedID').val().trim();
 	var pw =  $('#passwordBox').val().trim();
 	
 	if (host === "" || port === "" || db === "" || uname === "" || pw === "") {

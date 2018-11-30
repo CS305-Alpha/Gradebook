@@ -83,14 +83,22 @@ Currently, only attendance information is served
 		</div>
 		<div class="row">
 			<div class="input-field col s12 m6 l3">
-				<i class="material-icons prefix">mail</i>
-				<input id="email" type="email"/>
-				<label for="email">Email</label>
+				<i class="material-icons prefix">account_box</i>
+				<input id="schoolIssuedID" type="text"/>
+				<label for="schoolIssuedID">School ID</label>
 			</div>
 			<div class="input-field col s12 m6 l3">
 				<i class="material-icons prefix">lock</i>
 				<input id="passwordBox" type="password"/>
 				<label for="passwordBox">Password</label>
+			</div>
+			<div class="input-field col s12 m6 l3">
+				<i class="material-icons prefix">supervisor_account</i>
+				<select id="roleSelect">  
+					<option value="" disabled="true" selected="true">Choose role</option>
+					<option value="alpha_GB_Instructor">Instructor</option>
+					<option value="alpha_GB_Student">Student</option>
+				</select>
 			</div>
 			<a id="btnLogin" class="waves-effect waves-light btn">Login</a>
 		</div>
@@ -115,13 +123,32 @@ Currently, only attendance information is served
 				<input id="database" type="text" value="gradebook"/>
 				<label for="database">Database</label>
 			</div>
-			<div class="input-field col s12 m6 l3">
-				<input id="user" type="text" value="gb_webapp"/>
-				<label for="user">DB Username</label>
-			</div>
 			</div>
 		</div>
 		</li></ul>
+		
+		
+
+		<!--  start file upload  -->
+		<div class="divider"></div><br/>
+		<div class = "row">
+				<h5>Upload Roster</h5>
+			<label></label>
+			<div class = "file-field input-field">
+				<div class = "btn">
+					<span>Select File</span>
+					<input id="rosterImport" type = "file" />
+				</div>
+				<div class = "file-path-wrapper">
+					<input class = "file-path validate" type = "text"
+					placeholder = "*.txt, *.csv" />
+				</div>
+				<div id = "uploadBtn" class = "btn">Upload</div>
+
+			</div>
+		</div>
+		<!--  end file upload  -->
+
 	</div>
 	
 	<div id="roster">
