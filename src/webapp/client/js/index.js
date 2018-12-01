@@ -70,6 +70,22 @@ $(document).ready(function() {
 				
 				popYears(dbInfo);
 			});
+
+			var currentTime = new Date();
+
+			// Need season and userrole
+			var studentCourses = getStudentCourses(dbInfo, currentTime.getFullYear(), season, userrole);
+
+			// Need season and userrole
+			var studentSections = [];
+			for(var i = 0; i < studentCourses.length; i++) {
+				studentSections.push(getSectionIDs(dbInfo, currentTime.getFullYear(), season, studentSections[i], userrole));
+			}
+
+			var sectionDates = [];	
+			for(var i = 0; i < studentSections; i++){
+				sectionDates.concat(getSectionDates(dbInfo, studentSections[i]));
+			}
 		}
 		else {
 			showAlert('<h5>Missing field(s)</h5><p>One or more fields are ' +

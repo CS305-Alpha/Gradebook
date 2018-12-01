@@ -23,6 +23,9 @@ Currently, only attendance information is served
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<!--Import Materialize framework - Learn more: http://materializecss.com/-->
 	<link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
+	<!--Import Fullcalendar-->
+	<link rel="stylesheet" href="css/fullcalendar.css" />
+	
 	<style>
 		/* Materialize attempts to use the Roboto font family by default */
 		html {
@@ -197,6 +200,10 @@ Currently, only attendance information is served
 	<div id="reports">
 		<p class="center-align">The Reports page is not yet implemented</p>
 	</div>
+
+	<div id="schedule">
+		<div id='calendar'></div>
+	</div>
 	
 	<div id="about">
 		<h4>About Gradebook</h4>
@@ -272,6 +279,9 @@ Currently, only attendance information is served
 	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
 	<script type="text/javascript" src="js/materialize.min.js"></script>
 	<script type="text/javascript" src="js/index.js"></script>
+	<script src='lib/jquery.min.js'></script>
+	<script src="js/moment.min.js"></script>
+	<script src="js/fullcalendar.js"></script>
 	<script src="https://bitwiseshiftleft.github.io/sjcl/sjcl.js"></script>
 
 </html>
