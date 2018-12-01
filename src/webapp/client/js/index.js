@@ -136,7 +136,7 @@ function uploadRoster(event){
     var fileName = document.getElementById('#rosterImport').files[0].name;
 	
 	$.post('/importSectionRoster', { data: result, name: fileName }, showAlert("<p>Upload Successful.</p>"));
-
+	
 };
 
 function showAlert(htmlContent) {
@@ -163,8 +163,9 @@ function getDBFields() {
 };
 
 function serverLogin(connInfo, email, callback) {
+	var userRole = $('#roleSelect option:selected').val()
 	//"create a copy" of connInfo with instructoremail and set to urlParams
-	var urlParams = $.extend({}, connInfo, {instructoremail:email});
+	var urlParams = $.extend({}, connInfo, {userRole:userRole}); 
 	$.ajax('login', {
 		dataType: 'json',
 		data: urlParams ,
