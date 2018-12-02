@@ -79,13 +79,20 @@ $(document).ready(function() {
 			// Need season and userrole
 			var studentSections = [];
 			for(var i = 0; i < studentCourses.length; i++) {
-				studentSections.push(getSectionIDs(dbInfo, currentTime.getFullYear(), season, studentSections[i], userrole));
+				studentSections.push(getSectionIDs(dbInfo, currentTime.getFullYear(), season, studentCourses[i], userrole));
 			}
 
-			var sectionDates = [];	
+			var currentDates = [];	
 			for(var i = 0; i < studentSections; i++){
-				sectionDates.concat(getSectionDates(dbInfo, studentSections[i]));
+				var temp = {"sectiontitle:": studentSections[i].sectiontitle,
+							"sectiondates: ": getSectionDates(dbInfo, studentSections[i])};
+				currentDates.concat(temp);
 			}
+
+			$('#calendar').fullCalendar('renderEvent', {
+				title: currentDates[i].sectiontitle,
+				start: currentDates[i].sectiondates
+			});
 		}
 		else {
 			showAlert('<h5>Missing field(s)</h5><p>One or more fields are ' +
