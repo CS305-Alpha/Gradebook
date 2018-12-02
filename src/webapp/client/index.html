@@ -126,30 +126,33 @@ Currently, only attendance information is served
 			</div>
 		</div>
 		</li></ul>
-		
-		
 
-		<!--  start file upload  -->
-		<div class="divider"></div><br/>
-		<div class = "row">
-				<h5>Upload Roster</h5>
-			<label></label>
-			<div class = "file-field input-field">
-				<div class = "btn">
-					<span>Select File</span>
-					<input id="rosterImport" type = "file" />
+	</div>
+
+	<ul id="rosterBox" class="collapsible"><li>
+		<div class="collapsible-header">
+				<i id="rosterUploadArrow" class="material-icons">
+					keyboard_arrow_down</i>Roster Upload</div>
+		<div class="collapsible-body">
+			
+			<div id = 'uploadSection' class = "row">
+				<div class = "file-field input-field">
+					<div class = "btn waves-effect waves-light">
+						<span>Select File</span>
+						<input id="rosterImport" type = "file" />
+					</div>
+					<div class = "file-path-wrapper">
+						<input class = "file-path validate" type = "text"
+							placeholder = "*.txt, *.csv" />
+					</div>
+					<div id = "uploadBtn" class = "btn waves-effect waves-light">Upload</div>
+					</div>
 				</div>
-				<div class = "file-path-wrapper">
-					<input class = "file-path validate" type = "text"
-					placeholder = "*.txt, *.csv" />
-				</div>
-				<div id = "uploadBtn" class = "btn">Upload</div>
 			</div>
 		</div>
 		<!--  end file upload  -->
+	</li></ul>
 
-	</div>
-	
 	<div id="roster">
 		<p class="center-align">The Roster page is not yet implemented</p>
 	</div>

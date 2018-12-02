@@ -55,6 +55,15 @@ $(document).ready(function() {
 			$('#optionsArrow').html('keyboard_arrow_down');
 		}
 	});
+
+	$('#rosterBox').collapsible({
+		onOpen: function() {
+			$('#rosterUploadArrow').html('keyboard_arrow_up');
+		},
+		onClose: function() {
+			$('#rosterUploadArrow').html('keyboard_arrow_down');
+		}
+	});
 	
 	$('#btnLogin').click(function() {
 		dbInfo = getDBFields();
