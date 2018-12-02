@@ -89,10 +89,12 @@ $(document).ready(function() {
 				currentDates.concat(temp);
 			}
 
-			$('#calendar').fullCalendar('renderEvent', {
-				title: currentDates[i].sectiontitle,
-				start: currentDates[i].sectiondates
-			});
+			for(var i = 0; i < currentDates.length; i++) {
+				$('#calendar').fullCalendar('renderEvent', {
+					title: currentDates[i].sectiontitle,
+					start: currentDates[i].sectiondates
+				});
+			}
 		}
 		else {
 			showAlert('<h5>Missing field(s)</h5><p>One or more fields are ' +
