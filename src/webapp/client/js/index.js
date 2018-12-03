@@ -70,13 +70,22 @@ $(document).ready(function() {
 				
 				popYears(dbInfo);
 			});
+		}
+		else {
+			showAlert('<h5>Missing field(s)</h5><p>One or more fields are ' +
+			 'not filled in.</p><p>All fields are required, including those in ' +
+			 'DB Info.</p>');
+		}
+	});
 
+	$('#btnCalendarSeasonSelect').click(function() {
+		if($('#calendarSeasonSelect option:selected').val() != 'default') {
 			var currentTime = new Date();
+			var season = $('#calendarSeasonSelect option:selected').val();
+			var userrole = $('#roleSelect option:selected').val();
 
-			// Need season and userrole
 			var studentCourses = getStudentCourses(dbInfo, currentTime.getFullYear(), season, userrole);
 
-			// Need season and userrole
 			var studentSections = [];
 			for(var i = 0; i < studentCourses.length; i++) {
 				studentSections.push(getSectionIDs(dbInfo, currentTime.getFullYear(), season, studentCourses[i], userrole));
@@ -97,9 +106,7 @@ $(document).ready(function() {
 			}
 		}
 		else {
-			showAlert('<h5>Missing field(s)</h5><p>One or more fields are ' +
-			 'not filled in.</p><p>All fields are required, including those in ' +
-			 'DB Info.</p>');
+			showAlert('<h5>Incorrect field</h5><p>Select a valid season</p>');
 		}
 	});
 	
