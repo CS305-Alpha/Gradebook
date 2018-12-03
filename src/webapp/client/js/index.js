@@ -284,28 +284,7 @@ function listCourses(connInfo, user, year, seasonorder) {
 					dataType: 'json',
 					data: urlParams,
 					success: function(result) {
-						//sort sections based on section number
-						result.sections.sort(function (a,b) {
-							return a.sectionnumber < b.sectionnumber;
-						});
-
-						//build table row for each section
-						var sections = '';
-						for (var j = 0; j < result.sections.length; j++) {
-							var sectionObjStr = JSON.stringify(result.sections[j]).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-							sections += '<tr onclick="popAttendance(dbInfo, \'' + sectionObjStr + '\')"';
-							sections += 	' onmouseover="" style="cursor: pointer;">';
-							sections += '<td>' + result.sections[j].sectioncourse + '</td>';
-							sections += '<td>' + result.sections[j].sectionnumber + '</td>';
-							sections += '<td>' + result.sections[j].sectiontitle + '</td>';
-							sections += '<td>' + result.sections[j].sectionschedule + '</td>';
-							sections += '<td>' + result.sections[j].sectionlocation + '</td>';
-							sections += '<td>' + result.sections[j].sectioninstructors + '</td>';
-							sections += '</tr>';
-						}
-
-						//append new section to section list
-						appendSectionList(sections);
+						addResultToSectionList(result)
 					},
 					error: function(result) {
 						showAlert('<p>Error while retrieving sections</p>');
@@ -320,6 +299,31 @@ function listCourses(connInfo, user, year, seasonorder) {
 		}
 	});
 };
+
+function addResultToSectionList(result) {
+	//sort sections based on section number
+	result.sections.sort(function (a,b) {
+		return a.sectionnumber < b.sectionnumber;
+	});
+
+	//build table row for each section
+	var sections = '';
+	for (var j = 0; j < result.sections.length; j++) {
+		var sectionObjStr = JSON.stringify(result.sections[j]).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+		sections += '<tr onclick="popAttendance(dbInfo, \'' + sectionObjStr + '\')"';
+		sections += 	' onmouseover="" style="cursor: pointer;">';
+		sections += '<td>' + result.sections[j].sectioncourse + '</td>';
+		sections += '<td>' + result.sections[j].sectionnumber + '</td>';
+		sections += '<td>' + result.sections[j].sectiontitle + '</td>';
+		sections += '<td>' + result.sections[j].sectionschedule + '</td>';
+		sections += '<td>' + result.sections[j].sectionlocation + '</td>';
+		sections += '<td>' + result.sections[j].sectioninstructors + '</td>';
+		sections += '</tr>';
+	}
+
+	//append new section to section list
+	appendSectionList(sections);
+}
 
 function appendSectionList(htmlText) {
 	var currList = $('#sectionListBody').html();
