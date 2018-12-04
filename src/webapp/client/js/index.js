@@ -22,8 +22,7 @@ Currently, a globally scoped variable is used to store login information.
  client cookies.
 */
 var dbInfo = {
-	"host":null, "port":null, "database":null, "user":null, "password":null,
-	 "instructorid":null
+	"host":null, "port":null, "database":null, "user":null, "password":null
 };
 var instInfo = { "fname":null, "mname":null, "lname": null, "dept":null };
 
@@ -61,6 +60,15 @@ $(document).ready(function() {
 		}
 	});
 
+	$('#rosterBox').collapsible({
+		onOpen: function() {
+			$('#rosterUploadArrow').html('keyboard_arrow_up');
+		},
+		onClose: function() {
+			$('#rosterUploadArrow').html('keyboard_arrow_down');
+    }
+  });
+
 	$('#email').keyup(function(event) {
 		if (event.keyCode == 13) {
 			$('#btnLogin').click();
@@ -75,11 +83,11 @@ $(document).ready(function() {
 	
 	$('#btnLogin').click(function() {
 		dbInfo = getDBFields();
-		var email = $('#email').val().trim();
-		if (dbInfo != null && email != '') {
-			serverLogin(dbInfo, email, function() {
+		var issuedID = $('#schoolIssuedID').val().trim();
+		if (dbInfo != null && issuedID != '') {
+			serverLogin(dbInfo, issuedID, function() {
 				//clear login fields and close DB Info box
-				$('#email').val('');
+				$('#schoolIssuedID').val('');
 				$('#passwordBox').val('');
 				$('#dbInfoBox').collapsible('close', 0);
 				$('#dbInfoArrow').html('keyboard_arrow_down');
@@ -134,7 +142,26 @@ $(document).ready(function() {
 		$('#rosterTab, #attnTab, #gradesTab, #reportsTab').css('display', 'none');
 		$('ul.tabs').tabs('select_tab', 'login');
 	});
+
+	$('#uploadBtn').click(function()
+	{
+		dbInfo = getDBFields();
+		var file = document.getElementById('rosterImport').files[0];
+		var reader = new FileReader();
+		reader.readAsText(file, 'UTF-8');
+		reader.onload = uploadRoster;
+	});
+
 });
+
+function uploadRoster(event){
+	var result = event.target.result;
+	var fileName = document.getElementById('rosterImport').files[0].name;
+	
+	var data = $.extend({}, dbInfo, {data: result}, {name: fileName});
+	$.post('/importSectionRoster', data, showAlert("<p>Upload Successful.</p>"));
+	
+};
 
 function showAlert(htmlContent) {
 	$('#genericAlertBody').html(htmlContent);
@@ -145,7 +172,7 @@ function getDBFields() {
 	var host = $('#host').val().trim();
 	var port = $('#port').val().trim();
 	var db = $('#database').val().trim();
-	var uname = $('#user').val().trim();
+	var uname = $('#schoolIssuedID').val().trim();
 	var pw =  $('#passwordBox').val().trim();
 	
 	if (host === "" || port === "" || db === "" || uname === "" || pw === "") {
@@ -160,8 +187,9 @@ function getDBFields() {
 };
 
 function serverLogin(connInfo, email, callback) {
+	var userRole = $('#roleSelect option:selected').val()
 	//"create a copy" of connInfo with instructoremail and set to urlParams
-	var urlParams = $.extend({}, connInfo, {instructoremail:email});
+	var urlParams = $.extend({}, connInfo, {userRole:userRole}); 
 	$.ajax('login', {
 		dataType: 'json',
 		data: urlParams ,

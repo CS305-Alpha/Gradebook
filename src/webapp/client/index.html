@@ -83,14 +83,22 @@ Currently, only attendance information is served
 		</div>
 		<div class="row">
 			<div class="input-field col s12 m6 l3">
-				<i class="material-icons prefix">mail</i>
-				<input id="email" type="email"/>
-				<label for="email">Email</label>
+				<i class="material-icons prefix">account_box</i>
+				<input id="schoolIssuedID" type="text"/>
+				<label for="schoolIssuedID">School ID</label>
 			</div>
 			<div class="input-field col s12 m6 l3">
 				<i class="material-icons prefix">lock</i>
 				<input id="passwordBox" type="password"/>
 				<label for="passwordBox">Password</label>
+			</div>
+			<div class="input-field col s12 m6 l3">
+				<i class="material-icons prefix">supervisor_account</i>
+				<select id="roleSelect">  
+					<option value="" disabled="true" selected="true">Choose role</option>
+					<option value="instructor">Instructor</option>
+					<option value="student">Student</option>
+				</select>
 			</div>
 			<a id="btnLogin" class="waves-effect waves-light btn">Login</a>
 		</div>
@@ -115,15 +123,35 @@ Currently, only attendance information is served
 				<input id="database" type="text" value="gradebook"/>
 				<label for="database">Database</label>
 			</div>
-			<div class="input-field col s12 m6 l3">
-				<input id="user" type="text" value="gb_webapp"/>
-				<label for="user">DB Username</label>
-			</div>
 			</div>
 		</div>
 		</li></ul>
+
+	<ul id="rosterBox" class="collapsible"><li>
+		<div class="collapsible-header">
+				<i id="rosterUploadArrow" class="material-icons">
+					keyboard_arrow_down</i>Roster Upload</div>
+		<div class="collapsible-body">
+			
+			<div id = 'uploadSection' class = "row">
+				<div class = "file-field input-field">
+					<div class = "btn waves-effect waves-light">
+						<span>Select File</span>
+						<input id="rosterImport" type = "file" />
+					</div>
+					<div class = "file-path-wrapper">
+						<input class = "file-path validate" type = "text"
+							placeholder = "*.txt, *.csv" />
+					</div>
+					<div id = "uploadBtn" class = "btn waves-effect waves-light">Upload</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</li></ul>
+		
 	</div>
-	
+
 	<div id="roster">
 		<p class="center-align">The Roster page is not yet implemented</p>
 	</div>
