@@ -77,33 +77,17 @@ $(document).ready(function() {
 			 'DB Info.</p>');
 		}
 	});
-
+	
 	$('#btnCalendarSeasonSelect').click(function() {
-		if($('#calendarSeasonSelect option:selected').val() != 'default') {
-			var currentTime = new Date();
+		if($('#calendarSeasonSelect option:selected').val() != 'default' && $('#calendarYearSelect option:selected').val() != 'default' ) {
 			var season = $('#calendarSeasonSelect option:selected').val();
+			var year = $('#calendarYearSelect option:selected').val();
 			var userrole = $('#roleSelect option:selected').val();
+			
+			// Need to pre-load calendar, might be a better way to fix this.
+			$('#calendar').fullCalendar({});
 
-			var studentCourses = getStudentCourses(dbInfo, currentTime.getFullYear(), season, userrole);
-
-			var studentSections = [];
-			for(var i = 0; i < studentCourses.length; i++) {
-				studentSections.push(getSectionIDs(dbInfo, currentTime.getFullYear(), season, studentCourses[i], userrole));
-			}
-
-			var currentDates = [];	
-			for(var i = 0; i < studentSections; i++){
-				var temp = {"sectiontitle:": studentSections[i].sectiontitle,
-							"sectiondates: ": getSectionDates(dbInfo, studentSections[i])};
-				currentDates.concat(temp);
-			}
-
-			for(var i = 0; i < currentDates.length; i++) {
-				$('#calendar').fullCalendar('renderEvent', {
-					title: currentDates[i].sectiontitle,
-					start: currentDates[i].sectiondates
-				});
-			}
+			getStudentCourses(dbInfo, year, season, userrole);
 		}
 		else {
 			showAlert('<h5>Incorrect field</h5><p>Select a valid season</p>');
