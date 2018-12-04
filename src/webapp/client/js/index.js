@@ -417,7 +417,7 @@ function getStudentCourses(connInfo, sectionid) {
 			for(var i = 0; i < result.classDates.length; i++) {
 				sections.push(result.classDates[i]);
 			}
-			return dates;
+			//TODO: Implement population of calendar
 		},
 		error: function(result) {
 			showAlert('<p>Error while retrieving class dates</p>');
