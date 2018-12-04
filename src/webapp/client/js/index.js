@@ -114,7 +114,7 @@ $(document).ready(function() {
 			getStudentCourses(dbInfo, year, season, userrole);
 		}
 		else {
-			showAlert('<h5>Incorrect field</h5><p>Select a valid season</p>');
+			showAlert('<h5>Incorrect field</h5><p> Please recheck the selected fields </p>');
 		}
 	});
 
