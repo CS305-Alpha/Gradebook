@@ -397,7 +397,7 @@ function getStudentCourses(connInfo, year, seasonorder, coursenumber, userrole) 
 					"sectiontitle": result.sections[i].sectiontitle
 				})
 			}
-			return sections;
+			//TODO: Implement population of calendar
 		},
 		error: function(result) {
 			showAlert('<p>Error while retrieving sections</p>');
