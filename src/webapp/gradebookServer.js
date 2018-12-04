@@ -140,7 +140,7 @@ app.get('/login', function(request, response) {
       queryParams = [request.query.user];
    }
    else if (request.query.userRole == 'student') {
-      queryText = "SELECT getMyStudentID();"; //causes a 500 error rather 401
+      queryText = "SELECT * FROM getStudentAsStudent();"; //causes a 500 error rather 401 //TODO: need to get info, not just validate
    }
    else {
       response.status(400).send('400 - Unknown user role');
