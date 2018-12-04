@@ -129,7 +129,7 @@ app.get('/js/index.js', function(request, response) {
 
 //Returns instructor id and name from a provided email.
 app.get('/login', function(request, response) {
-   //Decrypt the password recieved from the client.  This is a temporary development
+    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
    var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
 
@@ -137,23 +137,32 @@ app.get('/login', function(request, response) {
    var config = createConnectionParams(request.query.user, request.query.database,
       passwordText, request.query.host, request.query.port);
 
-   //Get the params from the url
-   var instructorEmail = request.query.instructoremail.trim();
-
    //Set the query text
-   var queryText = 'SELECT ID, FName, MName, LName, Department FROM getInstructor($1);';
-   var queryParams = [instructorEmail];
-
+   var queryText;
+   var queryParams;
+   
+   if (request.query.userRole == 'instructor') {
+      queryText = "SELECT getInstructorIDByIssuedID($1)";
+      queryParams = [request.query.user];
+   }
+   else if (request.query.userRole == 'student') {
+      queryText = "SELECT getMyStudentID();"; //causes a 500 error rather 401
+   }
+   else {
+      response.status(400).send('400 - Unknown user role');
+      return;
+   }
+   
    //Execute the query
    executeQuery(response, config, queryText, queryParams, function(result) {
       //Check if any rows are returned.  No rows implies that the provided
-      //email does not match an existing instructor
+      //user does not match a known user
       if(result.rows.length == 0) {
          response.status(401).send('401 - Login failed');
       }
       else {
          var jsonReturn = {
-            "instructor": result.rows[0] //getInstructors should return at most one row
+            "user": result.rows[0] //getInstructors should return at most one row
          };
          response.send(JSON.stringify(jsonReturn));
       }
