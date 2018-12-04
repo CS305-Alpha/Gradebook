@@ -1,4 +1,13 @@
 /*
+gradebookServer.js - Gradebook
+
+Edited by Bruno DaSilva, Andrew Figueroa, and Jonathan Middleton (Team Alpha)
+ in support of CS305 coursework at Western Connecticut State University.
+
+Licensed to others under CC 4.0 BY-SA-NC
+
+This work is a derivative of Gradebook, originally developed by:
+
 Zach Boylan, Zaid Bhujwala, Andrew Figueroa, Steven Rollo
 
 Data Science & Systems Lab (DASSL), Western Connecticut State University
@@ -168,17 +177,14 @@ app.get('/years', function(request, response) {
 
    //Set the query text
    var queryParams;
-   if (userRole == 'alpha_GB_Instructor')
-   {
+   if(userRole == 'alpha_GB_Instructor') {
       queryText = 'SELECT Year FROM getInstructorYears($1);';
       queryParams = [userID];
-   } 
-   else if (userRole == 'alpha_GB_Student')
-   {
+   }
+   else if(userRole == 'alpha_GB_Student') {
       queryText = 'SELECT Year FROM getYearsAsStudent();';
    }
-   else
-   {
+   else {
       queryText = 'SELECT DISTINCT year FROM term;';
    }
 
@@ -258,12 +264,24 @@ app.get('/courses', function(request, response) {
    var config = createConnectionParams(request.query.user, request.query.database,
       passwordText, request.query.host, request.query.port);
 
-   var instructorID = request.query.instructorid;
+   var userID = request.query.userid;
    var year = request.query.year;
    var seasonOrder = request.query.seasonorder;
+   var userRole = request.query.userRole;
 
-   var queryText = 'SELECT Course FROM getInstructorCourses($1, $2, $3);';
-   var queryParams = [instructorID, year, seasonOrder];
+   if(userRole == 'instructor') {
+      var queryText = 'SELECT Course FROM getInstructorCourses($1, $2, $3);';
+      var queryParams = [userID, year, seasonOrder];
+
+   }
+   else if(userRole == 'student') {
+      var queryText = 'SELECT SectionID, SectionNumber FROM getStudentCourses($1, $2, $3, $4);';
+      var queryParams = [userID, year, seasonOrder, courseNumber];
+   }
+   else {
+      response.status(400).send('400 - Unknown user role');
+      return;
+   }
 
    executeQuery(response, config, queryText, queryParams, function(result) {
       var courses = [];
@@ -278,7 +296,7 @@ app.get('/courses', function(request, response) {
 
 });
 
-//Returns a list of sesctions an instructor taught in a certain term
+//Returns a list of sections a user has participated in during certain term
 app.get('/sections', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
@@ -288,16 +306,26 @@ app.get('/sections', function(request, response) {
    var config = createConnectionParams(request.query.user, request.query.database,
       passwordText, request.query.host, request.query.port);
 
-   var instructorID = request.query.instructorid;
+   var userID = request.query.userid;
    var year = request.query.year;
    var seasonOrder = request.query.seasonorder;
    var courseNumber = request.query.coursenumber;
+   var userRole = request.query.userRole;
 
+   if(userRole == 'instructor') {
    var queryText = 'SELECT SectionID, Course, GIS.SectionNumber, Title,' +
                    ' Schedule, Location, Instructors FROM' +
                    ' getInstructorSections($1, $2, $3, $4) GIS,' +
                    ' getSection(GIS.sectionID);';
    var queryParams = [instructorID, year, seasonOrder, courseNumber];
+   }
+   else if(userRole == 'student') {
+      console.log("Student sections not yet implemented");
+   }
+   else {
+      response.status(400).send('400 - Unknown user role');
+      return;
+   }
 
    executeQuery(response, config, queryText, queryParams, function(result) {
       var sections = [];
@@ -340,7 +368,7 @@ app.get('/sectionschedule', function(request, response) {
 
    executeQuery(response, config, queryText, queryParams, function(result) {
       for(row in result.rows) {
-         closedDates.push( result.rows[row].date);
+         closedDates.push(result.rows[row].date);
       }
    });
 
@@ -350,8 +378,7 @@ app.get('/sectionschedule', function(request, response) {
    executeQuery(response, config, queryText, queryParams, function(result) {
       var classDates = [];
       for(row in result.rows) {
-         if(!closedDates.includes(result.rows[row].date))
-         {
+         if(!closedDates.includes(result.rows[row].date)) {
             classDates.push(result.rows[row].date);
          }
       }
@@ -377,9 +404,9 @@ app.get('/sectionreport', function(request, response) {
    var offset = request.query.offset;
 
    var queryText = "SELECT getTermCourseCount(getTermID($1, $2)) AS CourseCount, " +
-                    "getTermSectionCount(getTermID($1, $2)) AS SectionCount, " +
-                    "getTermInstructorCount(getTermID($1, $2)) AS InstructorCount, " +
-                    "getTermStudentCount(getTermID($1, $2)) AS StudentCount;";
+      "getTermSectionCount(getTermID($1, $2)) AS SectionCount, " +
+      "getTermInstructorCount(getTermID($1, $2)) AS InstructorCount, " +
+      "getTermStudentCount(getTermID($1, $2)) AS StudentCount;";
    var queryParams = [year, seasonCode];
 
    executeQuery(response, config, queryText, queryParams, function(result) {
@@ -389,7 +416,7 @@ app.get('/sectionreport', function(request, response) {
       var studentCount = result.rows[0].studentcount;
 
       queryText = "SELECT * FROM getTermSectionsReport(getTermID($1, $2)) " +
-                  "ORDER BY Course ASC, SectionNumber ASC LIMIT $3 OFFSET $4;";
+         "ORDER BY Course ASC, SectionNumber ASC LIMIT $3 OFFSET $4;";
       queryParams = [year, seasonCode, limit, offset];
 
       executeQuery(response, config, queryText, queryParams, function(result) {
@@ -401,7 +428,7 @@ app.get('/sectionreport', function(request, response) {
             "Sections": []
          };
 
-         for (row in result.rows) {
+         for(row in result.rows) {
             jsonReturn.Sections.push(result.rows[row]);
          }
 
