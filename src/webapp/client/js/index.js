@@ -24,7 +24,7 @@ Currently, a globally scoped variable is used to store login information.
 var dbInfo = {
 	"host":null, "port":null, "database":null, "user":null, "password":null
 };
-var instInfo = { "fname":null, "mname":null, "lname": null, "dept":null };
+var instInfo = {"fname": null, "mname": null, "lname": null, "dept": null};
 
 var displayedSection = {"id":null, "sectioncourse":null, "sectionnumber":null,
 	"sectiontitle":null, "sectionschedule":null, "sectionlocation":null,
@@ -41,7 +41,7 @@ Each instance of connInfo as a parameter in a function definition refers to an
 
 $(document).ready(function() {
 	$('select').material_select(); //load dropdown boxes
-	
+
 	$('#dbInfoBox').collapsible({
 		onOpen: function() {
 			$('#dbInfoArrow').html('keyboard_arrow_up');
@@ -50,7 +50,7 @@ $(document).ready(function() {
 			$('#dbInfoArrow').html('keyboard_arrow_down');
 		}
 	});
-	
+
 	$('#attnOptionsBox').collapsible({
 		onOpen: function() {
 			$('#optionsArrow').html('keyboard_arrow_up');
@@ -80,7 +80,7 @@ $(document).ready(function() {
 			$('#btnLogin').click();
 		}
 	});
-	
+
 	$('#btnLogin').click(function() {
 		dbInfo = getDBFields();
 		var issuedID = $('#schoolIssuedID').val().trim();
@@ -91,28 +91,40 @@ $(document).ready(function() {
 				$('#passwordBox').val('');
 				$('#dbInfoBox').collapsible('close', 0);
 				$('#dbInfoArrow').html('keyboard_arrow_down');
-				
+
 				popYears(dbInfo);
 			});
 		}
 		else {
 			showAlert('<h5>Missing field(s)</h5><p>One or more fields are ' +
-			 'not filled in.</p><p>All fields are required, including those in ' +
-			 'DB Info.</p>');
+				'not filled in.</p><p>All fields are required, including those in ' +
+				'DB Info.</p>');
 		}
 	});
-	
+
 	$('#yearSelect').change(function() {
 		var year = $('#yearSelect').val();
 		popSeasons(dbInfo, year);
 	});
-	
+
 	$('#seasonSelect').change(function() {
 		var year = $('#yearSelect').val();
 		var season = $('#seasonSelect').val();
 		listCourses(dbInfo, user, year, season);
 	});
-	
+
+	$('#courseSelect').change(function() {
+		var year = $('#yearSelect').val();
+		var season = $('#seasonSelect').val();
+		var course = $('#courseSelect').val();
+		popSections(dbInfo, year, season, course);
+	});
+
+	$('#sectionSelect').change(function() {
+		var sectionID = $('#sectionSelect').val();
+		popAttendance(dbInfo, sectionID);
+  });
+  
 	$('#btnReturnToSelect').click(function() {
 		$('#currentSelection').slideUp(500, function() {
 			$('#attnOptionsBox-wrapper').fadeOut();
@@ -120,23 +132,24 @@ $(document).ready(function() {
 			$('#sectionListing').slideDown(500);
 		});
 	});
-	
+
 	$('#opt-showPresent, #opt-compactTab').change(function() {
 		//reload attendance table since options were modified
 		popAttendance(dbInfo, displayedSection);
 	});
-	
+
 	$('#logout').click(function() {
 		dbInfo = null;
 		instInfo = null;
 		setYears(null); //reset Attendance dropdowns
 
+
 		$('#sectionListBody').html(''); //clear section list
-		
+
 		//hide and reset profile
 		$('#profile').css('display', 'none');
 		$('#instName').html('');
-		
+
 		//show Login tab, hide Roster, Attendance, Grades, and Reports tabs
 		$('#loginTab').css('display', 'inline');
 		$('#rosterTab, #attnTab, #gradesTab, #reportsTab').css('display', 'none');
@@ -178,11 +191,13 @@ function getDBFields() {
 	if (host === "" || port === "" || db === "" || uname === "" || pw === "") {
 		return null;
 	}
-	
+
 	pw = JSON.stringify(sjcl.encrypt('dassl2017', pw));
-	
-	var connInfo = { 'host':host, 'port':parseInt(port, 10), 'database':db,
-	 'user':uname, 'password':pw };
+
+	var connInfo = {
+		'host': host, 'port': parseInt(port, 10), 'database': db,
+		'user': uname, 'password': pw
+	};
 	return connInfo;
 };
 
@@ -190,33 +205,36 @@ function serverLogin(connInfo, email, callback) {
 	var userRole = $('#roleSelect option:selected').val()
 	//"create a copy" of connInfo with instructoremail and set to urlParams
 	var urlParams = $.extend({}, connInfo, {userRole:userRole}); 
+
 	$.ajax('login', {
 		dataType: 'json',
-		data: urlParams ,
+		data: urlParams,
 		success: function(result) {
 			//populate dbInfo and instInfo with info from response
 			dbInfo.instructorid = result.instructor.id;
-			instInfo = { fname:result.instructor.fname, 
-			mname:result.instructor.mname, lname:result.instructor.lname,
-			dept:result.instructor.department };
-			
+			instInfo = {
+				fname: result.instructor.fname,
+				mname: result.instructor.mname, lname: result.instructor.lname,
+				dept: result.instructor.department
+			};
+
 			//hide Login tab, show Roster, Attendance, Grades, and Reports tabs
 			$('#loginTab').css('display', 'none');
 			$('#rosterTab, #attnTab, #gradesTab, #reportsTab').css('display', 'inline');
 			$('ul.tabs').tabs('select_tab', 'attendance');
-			
+
 			//populate instructor name and display profile (including logout menu)
 			//Array.prototype.join is used because in JS: '' + null = 'null'
 			var instName = [instInfo.fname, instInfo.mname, instInfo.lname].join(' ');
 			$('#instName').html(instName);
 			$('#profile').css('display', 'inline');
-			
+
 			callback();
 		},
 		error: function(result) {
 			//currently does not distinguish between credential and connection errors
 			showAlert('<h5>Could not login</h5><p>Login failed - ensure ' +
-			 'all fields are correct</p>');
+				'all fields are correct</p>');
 			console.log(result);
 		}
 	});
@@ -228,9 +246,9 @@ function popYears(connInfo) {
 		data: connInfo,
 		success: function(result) {
 			var years = '';
-			for (var i = 0; i < result.years.length; i++) {
+			for(var i = 0; i < result.years.length; i++) {
 				years += '<option value="' + result.years[i] + '">' +
-				 result.years[i] + '</option>';
+					result.years[i] + '</option>';
 			}
 			setYears(years);
 		},
@@ -242,15 +260,15 @@ function popYears(connInfo) {
 };
 
 function popSeasons(connInfo, year) {
-	var urlParams = $.extend({}, connInfo, {year:year});
+	var urlParams = $.extend({}, connInfo, {year: year});
 	$.ajax('seasons', {
 		dataType: 'json',
 		data: urlParams,
 		success: function(result) {
 			var seasons = '';
-			for (var i = 0; i < result.seasons.length; i++) {
+			for(var i = 0; i < result.seasons.length; i++) {
 				seasons += '<option value="' + result.seasons[i].seasonorder +
-				 '">' + result.seasons[i].seasonname + '</option>';
+					'">' + result.seasons[i].seasonname + '</option>';
 			}
 			setSeasons(seasons);
 		},
@@ -260,6 +278,7 @@ function popSeasons(connInfo, year) {
 		}
 	});
 };
+
 
 function popAttendance(connInfo, section) {
 	if (typeof(section) !== "object") {
@@ -328,6 +347,7 @@ function listCourses(connInfo, user, year, seasonorder) {
 	});
 };
 
+
 function addResultToSectionList(result) {
 	//sort sections based on section number
 	result.sections.sort(function (a,b) {
@@ -360,47 +380,47 @@ function appendSectionList(htmlText) {
 
 function setYears(htmlText) {
 	var content = '<option value="" disabled="true" selected="true">' +
-	 'Choose year</option>' + htmlText;
+		'Choose year</option>' + htmlText;
 	$('#yearSelect').html(content);
 	$('#yearSelect').prop('disabled', htmlText == null);
 	$('#yearSelect').material_select(); //reload dropdown
+
 	
 	setSeasons(null); //reset dependent field
 };
 
 function setSeasons(htmlText) {
 	var content = '<option value="" disabled="true" selected="true">' +
-	 'Choose season</option>' + htmlText;
+		'Choose season</option>' + htmlText;
 	$('#seasonSelect').html(content);
 	$('#seasonSelect').prop('disabled', htmlText == null);
 	$('#seasonSelect').material_select(); //reload dropdown
-
 	$('#sectionListBody').html(''); //clear section list
 };
 
 function setAttendance(htmlText) {
 	var showPs = $('#opt-showPresent').is(':checked');
 	var isCompact = $('#opt-compactTab').is(':checked');
-	
-	if (htmlText == null) {
+
+	if(htmlText == null) {
 		$('#attendanceData').html('');
 		$('#attnOptionsBox-wrapper').fadeOut();
 	}
 	else {
-		if (htmlText.substring(0, 7) !== '<table>') {
+		if(htmlText.substring(0, 7) !== '<table>') {
 			console.log('WARN: setAttendance(): Unable to style attendance table;' +
-			 ' first 7 chars did not match "<table>"');
+				' first 7 chars did not match "<table>"');
 		}
 		else {
-			if (!showPs) {
+			if(!showPs) {
 				//replace all 'P' fields with a space
 				htmlText = htmlText.replace(/>P<\/td>/g, '> </td>');
 			}
-			if (isCompact) {
+			if(isCompact) {
 				//add attibutes to <table> tag to use compact framework styling
 				htmlText = '<table class="striped" style="line-height:1.1;">' +
-				 htmlText.substring(7);
-				 
+					htmlText.substring(7);
+
 				//give all td tags the "compact" class
 				htmlText = htmlText.replace(/<td /g, '<td class="compact" ');
 			}
@@ -413,4 +433,66 @@ function setAttendance(htmlText) {
 		$('#attnOptionsBox-wrapper').fadeIn();
 		$('#attendanceData').fadeIn();
 	}
+};
+
+// Returns list of courses for a given user id
+function getStudentCourses(connInfo, year, seasonorder, userrole) {
+	var urlParams = $.extend({}, connInfo, {year: year, seasonorder: seasonorder, userrole: userrole});
+	$.ajax('courses', {
+		dataType: 'json',
+		data: urlParams,
+		success: function(result) {
+			//TODO: Implement population of calendar
+		},
+		error: function(result) {
+			showAlert('<p>Error while retrieving courses</p>');
+			console.log(result);
+		}
+	});
+};
+
+// Returns sectionid and sectiontitle for a given course
+function getStudentCourses(connInfo, year, seasonorder, coursenumber, userrole) {
+	var urlParams = $.extend({}, connInfo, {
+		year: year, seasonorder: seasonorder,
+		coursenumber: coursenumber, userrole: userrole
+	});
+	$.ajax('sections', {
+		dataType: 'json',
+		data: urlParams,
+		success: function(result) {
+			var sections = [];
+			for(var i = 0; i < result.sections.length; i++) {
+				sections.push({
+					"sectionid": result.sections[i].sectiondid,
+					"sectiontitle": result.sections[i].sectiontitle
+				})
+			}
+			//TODO: Implement population of calendar
+		},
+		error: function(result) {
+			showAlert('<p>Error while retrieving sections</p>');
+			console.log(result);
+		}
+	});
+};
+
+// Returns lit of schedule dates for a given sectionid
+function getStudentCourses(connInfo, sectionid) {
+	var urlParams = $.extend({}, connInfo, {sectionid: sectionid});
+	$.ajax('sectionsschedule', {
+		dataType: 'json',
+		data: urlParams,
+		success: function(result) {
+			var dates = [];
+			for(var i = 0; i < result.classDates.length; i++) {
+				sections.push(result.classDates[i]);
+			}
+			//TODO: Implement population of calendar
+		},
+		error: function(result) {
+			showAlert('<p>Error while retrieving class dates</p>');
+			console.log(result);
+		}
+	});
 };
