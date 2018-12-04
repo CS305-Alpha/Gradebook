@@ -364,23 +364,8 @@ function setAttendance(htmlText) {
 	}
 };
 
-// Returns list of courses for a given user id
-function getStudentCourses(connInfo, year, seasonorder, userrole) {
-	var urlParams = $.extend({}, connInfo, {year: year, seasonorder: seasonorder, userrole: userrole});
-	$.ajax('courses', {
-		dataType: 'json',
-		data: urlParams,
-		success: function(result) {
-			//TODO: Implement population of calendar
-		},
-		error: function(result) {
-			showAlert('<p>Error while retrieving courses</p>');
-			console.log(result);
-		}
-	});
-};
-
-// Returns sectionid and sectiontitle for a given course
+// Assuming 'sections' endpoint gives all the sections(title and id) that the user is currently enrolled in
+// for a given year and season
 function getSectionIDs(connInfo, year, seasonorder, coursenumber, userrole) {
 	var urlParams = $.extend({}, connInfo, {
 		year: year, seasonorder: seasonorder,
@@ -392,12 +377,9 @@ function getSectionIDs(connInfo, year, seasonorder, coursenumber, userrole) {
 		success: function(result) {
 			var sections = [];
 			for(var i = 0; i < result.sections.length; i++) {
-				sections.push({
-					"sectionid": result.sections[i].sectiondid,
-					"sectiontitle": result.sections[i].sectiontitle
-				})
+				getSectionDates(connInfo, result.sections[i].sectionid, result.sections[i].sectiontitle);
 			}
-			//TODO: Implement population of calendar
+			
 		},
 		error: function(result) {
 			showAlert('<p>Error while retrieving sections</p>');
@@ -407,17 +389,16 @@ function getSectionIDs(connInfo, year, seasonorder, coursenumber, userrole) {
 };
 
 // Returns lit of schedule dates for a given sectionid
-function getSecitonDates(connInfo, sectionid) {
+function getSectionDates(connInfo, sectionid, sectiontitle) {
 	var urlParams = $.extend({}, connInfo, {sectionid: sectionid});
 	$.ajax('sectionsschedule', {
 		dataType: 'json',
 		data: urlParams,
 		success: function(result) {
-			var dates = [];
 			for(var i = 0; i < result.classDates.length; i++) {
-				sections.push(result.classDates[i]);
+				var event = {id: i, title: sectiontitle, start: result.classDates[i]};
+				$('#calendar').fullCalendar('renderEvent', event, true);
 			}
-			//TODO: Implement population of calendar
 		},
 		error: function(result) {
 			showAlert('<p>Error while retrieving class dates</p>');
