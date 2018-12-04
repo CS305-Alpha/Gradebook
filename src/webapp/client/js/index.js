@@ -27,6 +27,10 @@ var dbInfo = {
 };
 var instInfo = {"fname": null, "mname": null, "lname": null, "dept": null};
 
+var displayedSection = {"id":null, "sectioncourse":null, "sectionnumber":null,
+	"sectiontitle":null, "sectionschedule":null, "sectionlocation":null,
+	"sectioninstructors":null};
+
 /* 
 Each instance of connInfo as a parameter in a function definition refers to an 
  object with the following keys, which are used as part of the REST API calls to
@@ -54,6 +58,18 @@ $(document).ready(function() {
 		},
 		onClose: function() {
 			$('#optionsArrow').html('keyboard_arrow_down');
+		}
+	});
+
+	$('#email').keyup(function(event) {
+		if (event.keyCode == 13) {
+			$('#btnLogin').click();
+		}
+	});
+
+	$('#passwordBox').keyup(function(event) {
+		if (event.keyCode == 13) {
+			$('#btnLogin').click();
 		}
 	});
 
@@ -86,7 +102,7 @@ $(document).ready(function() {
 	$('#seasonSelect').change(function() {
 		var year = $('#yearSelect').val();
 		var season = $('#seasonSelect').val();
-		popCourses(dbInfo, year, season);
+		listCourses(dbInfo, user, year, season);
 	});
 
 	$('#courseSelect').change(function() {
@@ -99,18 +115,28 @@ $(document).ready(function() {
 	$('#sectionSelect').change(function() {
 		var sectionID = $('#sectionSelect').val();
 		popAttendance(dbInfo, sectionID);
+  });
+  
+	$('#btnReturnToSelect').click(function() {
+		$('#currentSelection').slideUp(500, function() {
+			$('#attnOptionsBox-wrapper').fadeOut();
+			$('#attendanceData').fadeOut();
+			$('#sectionListing').slideDown(500);
+		});
 	});
 
 	$('#opt-showPresent, #opt-compactTab').change(function() {
 		//reload attendance table since options were modified
-		var sectionID = $('#sectionSelect').val();
-		popAttendance(dbInfo, sectionID);
+		popAttendance(dbInfo, displayedSection);
 	});
 
 	$('#logout').click(function() {
 		dbInfo = null;
 		instInfo = null;
 		setYears(null); //reset Attendance dropdowns
+
+
+		$('#sectionListBody').html(''); //clear section list
 
 		//hide and reset profile
 		$('#profile').css('display', 'none');
@@ -224,51 +250,21 @@ function popSeasons(connInfo, year) {
 	});
 };
 
-function popCourses(connInfo, year, seasonorder) {
-	var urlParams = $.extend({}, connInfo, {year: year, seasonorder: seasonorder});
-	$.ajax('courses', {
-		dataType: 'json',
-		data: urlParams,
-		success: function(result) {
-			var courses = '';
-			for(var i = 0; i < result.courses.length; i++) {
-				courses += '<option value="' + result.courses[i] + '">' +
-					result.courses[i] + '</option>';
-			}
-			setCourses(courses);
-		},
-		error: function(result) {
-			showAlert('<p>Error while retrieving courses</p>');
-			console.log(result);
-		}
-	});
-};
 
-function popSections(connInfo, year, seasonorder, coursenumber) {
-	var urlParams = $.extend({}, connInfo, {
-		year: year, seasonorder: seasonorder,
-		coursenumber: coursenumber
-	});
-	$.ajax('sections', {
-		dataType: 'json',
-		data: urlParams,
-		success: function(result) {
-			var sections = '';
-			for(var i = 0; i < result.sections.length; i++) {
-				sections += '<option value="' + result.sections[i].sectionid +
-					'">' + result.sections[i].sectionnumber + '</option>';
-			}
-			setSections(sections);
-		},
-		error: function(result) {
-			showAlert('<p>Error while retrieving sections</p>');
-			console.log(result);
-		}
-	});
-};
+function popAttendance(connInfo, section) {
+	if (typeof(section) !== "object") {
+		section = JSON.parse(section);
+	}
+	displayedSection = section;
+	$('#currentSection').html('<h4>' + displayedSection.sectioncourse + "-" +
+	 displayedSection.sectionnumber + " " + displayedSection.sectiontitle +
+	  ' | ' + $('#seasonSelect option:selected').text() + " " + $('#yearSelect').val() + '</h4>');
 
-function popAttendance(connInfo, sectionid) {
-	var urlParams = $.extend({}, connInfo, {sectionid: sectionid});
+	$('#sectionListing').slideUp(500, function() {
+		$('#currentSelection').slideDown(500);
+	});
+
+	var urlParams = $.extend({}, connInfo, {sectionid:section.sectionid});
 	$.ajax('attendance', {
 		dataType: 'html',
 		data: urlParams,
@@ -276,7 +272,7 @@ function popAttendance(connInfo, sectionid) {
 			setAttendance(result);
 		},
 		error: function(result) {
-			if(result.responseText == '500 - No Attenance Records') {
+			if (result.responseText == '500 - No Attenance Records') {
 				showAlert('<p>No attendance records exist for this section</p>');
 			}
 			else {
@@ -288,6 +284,71 @@ function popAttendance(connInfo, sectionid) {
 	});
 };
 
+function listCourses(connInfo, user, year, seasonorder) {
+	$('#sectionListBody').html(''); //clear list of sections
+	$('#sectionListingTable').slideDown('slow');
+	var urlParams = $.extend({}, connInfo, {year:year, seasonorder:seasonorder});
+
+	//promises would be helpful here to avoid having 7 levels of indentation
+	$.ajax('courses', {
+		dataType: 'json',
+		data: urlParams,
+		success: function(result) {
+			result.courses.sort();
+			for (var i = 0; i < result.courses.length; i++) {
+				 var urlParams = $.extend({}, connInfo, {year:year, seasonorder:seasonorder,
+					coursenumber:result.courses[i]});
+				$.ajax('sections', {
+					dataType: 'json',
+					data: urlParams,
+					success: function(result) {
+						addResultToSectionList(result)
+					},
+					error: function(result) {
+						showAlert('<p>Error while retrieving sections</p>');
+						console.log(result);
+					}
+				});
+			}
+		},
+		error: function(result) {
+			showAlert('<p>Error while retrieving courses</p>');
+			console.log(result);
+		}
+	});
+};
+
+
+function addResultToSectionList(result) {
+	//sort sections based on section number
+	result.sections.sort(function (a,b) {
+		return a.sectionnumber < b.sectionnumber;
+	});
+
+	//build table row for each section
+	var sections = '';
+	for (var j = 0; j < result.sections.length; j++) {
+		var sectionObjStr = JSON.stringify(result.sections[j]).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+		sections += '<tr onclick="popAttendance(dbInfo, \'' + sectionObjStr + '\')"';
+		sections += 	' onmouseover="" style="cursor: pointer;">';
+		sections += '<td>' + result.sections[j].sectioncourse + '</td>';
+		sections += '<td>' + result.sections[j].sectionnumber + '</td>';
+		sections += '<td>' + result.sections[j].sectiontitle + '</td>';
+		sections += '<td>' + result.sections[j].sectionschedule + '</td>';
+		sections += '<td>' + result.sections[j].sectionlocation + '</td>';
+		sections += '<td>' + result.sections[j].sectioninstructors + '</td>';
+		sections += '</tr>';
+	}
+
+	//append new section to section list
+	appendSectionList(sections);
+}
+
+function appendSectionList(htmlText) {
+	var currList = $('#sectionListBody').html();
+	$('#sectionListBody').html(currList + htmlText);
+};
+
 function setYears(htmlText) {
 	var content = '<option value="" disabled="true" selected="true">' +
 		'Choose year</option>' + htmlText;
@@ -295,7 +356,8 @@ function setYears(htmlText) {
 	$('#yearSelect').prop('disabled', htmlText == null);
 	$('#yearSelect').material_select(); //reload dropdown
 
-	setSeasons(null); //reset dependent fields
+	
+	setSeasons(null); //reset dependent field
 };
 
 function setSeasons(htmlText) {
@@ -304,28 +366,7 @@ function setSeasons(htmlText) {
 	$('#seasonSelect').html(content);
 	$('#seasonSelect').prop('disabled', htmlText == null);
 	$('#seasonSelect').material_select(); //reload dropdown
-
-	setCourses(null); //reset dependent fields
-};
-
-function setCourses(htmlText) {
-	var content = '<option value="" disabled="true" selected="true">' +
-		'Choose course</option>' + htmlText;
-	$('#courseSelect').html(content);
-	$('#courseSelect').prop('disabled', htmlText == null);
-	$('#courseSelect').material_select(); //reload dropdown
-
-	setSections(null); //reset dependent fields
-};
-
-function setSections(htmlText) {
-	var content = '<option value="" disabled="true" selected="true">' +
-		'Choose section</option>' + htmlText;
-	$('#sectionSelect').html(content);
-	$('#sectionSelect').prop('disabled', htmlText == null);
-	$('#sectionSelect').material_select(); //reload dropdown
-
-	setAttendance(null);
+	$('#sectionListBody').html(''); //clear section list
 };
 
 function setAttendance(htmlText) {
@@ -334,7 +375,7 @@ function setAttendance(htmlText) {
 
 	if(htmlText == null) {
 		$('#attendanceData').html('');
-		$('#attnOptionsBox').css('display', 'none');
+		$('#attnOptionsBox-wrapper').fadeOut();
 	}
 	else {
 		if(htmlText.substring(0, 7) !== '<table>') {
@@ -359,8 +400,9 @@ function setAttendance(htmlText) {
 				htmlText = '<table class="striped">' + htmlText.substring(7);
 			}
 		}
-		$('#attnOptionsBox').css('display', 'block');
 		$('#attendanceData').html(htmlText);
+		$('#attnOptionsBox-wrapper').fadeIn();
+		$('#attendanceData').fadeIn();
 	}
 };
 
