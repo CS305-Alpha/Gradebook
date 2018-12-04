@@ -27,7 +27,8 @@ SET LOCAL search_path TO 'alpha', 'pg_temp';
 DROP FUNCTION IF EXISTS getScheduleDates(startDate DATE, endDate DATE,
                                  schedule VARCHAR(7)
                                 );
-DROP FUNCTION IF EXISTS getAttendance(sectionID INT)
+DROP FUNCTION IF EXISTS getScheduleDates(sectionID INT);
+DROP FUNCTION IF EXISTS getAttendance(sectionID INT);
 DROP FUNCTION IF EXISTS getAttendance(year NUMERIC(4,0),
                               seasonIdentification VARCHAR(20),
                               course VARCHAR(8),
