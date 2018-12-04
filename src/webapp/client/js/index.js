@@ -143,7 +143,7 @@ $(document).ready(function() {
 
 function uploadRoster(event){
 	var result = event.target.result;
-    var fileName = document.getElementById('#rosterImport').files[0].name;
+	var fileName = document.getElementById('rosterImport').files[0].name;
 	
 	$.post('/importSectionRoster', { data: result, name: fileName }, showAlert("<p>Upload Successful.</p>"));
 	
