@@ -381,7 +381,7 @@ function getStudentCourses(connInfo, year, seasonorder, userrole) {
 };
 
 // Returns sectionid and sectiontitle for a given course
-function getStudentCourses(connInfo, year, seasonorder, coursenumber, userrole) {
+function getSectionIDs(connInfo, year, seasonorder, coursenumber, userrole) {
 	var urlParams = $.extend({}, connInfo, {
 		year: year, seasonorder: seasonorder,
 		coursenumber: coursenumber, userrole: userrole
@@ -407,7 +407,7 @@ function getStudentCourses(connInfo, year, seasonorder, coursenumber, userrole) 
 };
 
 // Returns lit of schedule dates for a given sectionid
-function getStudentCourses(connInfo, sectionid) {
+function getSecitonDates(connInfo, sectionid) {
 	var urlParams = $.extend({}, connInfo, {sectionid: sectionid});
 	$.ajax('sectionsschedule', {
 		dataType: 'json',
