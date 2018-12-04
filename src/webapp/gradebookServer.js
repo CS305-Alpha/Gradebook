@@ -129,7 +129,7 @@ app.get('/js/index.js', function(request, response) {
 
 //Returns instructor id and name from a provided email.
 app.get('/login', function(request, response) {
-   //Decrypt the password recieved from the client.  This is a temporary development
+    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
    var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
 
@@ -137,23 +137,32 @@ app.get('/login', function(request, response) {
    var config = createConnectionParams(request.query.user, request.query.database,
       passwordText, request.query.host, request.query.port);
 
-   //Get the params from the url
-   var instructorEmail = request.query.instructoremail.trim();
-
    //Set the query text
-   var queryText = 'SELECT ID, FName, MName, LName, Department FROM getInstructor($1);';
-   var queryParams = [instructorEmail];
-
+   var queryText;
+   var queryParams;
+   
+   if (request.query.userRole == 'instructor') {
+      queryText = "SELECT getInstructorIDByIssuedID($1)";
+      queryParams = [request.query.user];
+   }
+   else if (request.query.userRole == 'student') {
+      queryText = "SELECT getMyStudentID();"; //causes a 500 error rather 401
+   }
+   else {
+      response.status(400).send('400 - Unknown user role');
+      return;
+   }
+   
    //Execute the query
    executeQuery(response, config, queryText, queryParams, function(result) {
       //Check if any rows are returned.  No rows implies that the provided
-      //email does not match an existing instructor
+      //user does not match a known user
       if(result.rows.length == 0) {
          response.status(401).send('401 - Login failed');
       }
       else {
          var jsonReturn = {
-            "instructor": result.rows[0] //getInstructors should return at most one row
+            "user": result.rows[0] //getInstructors should return at most one row
          };
          response.send(JSON.stringify(jsonReturn));
       }
@@ -177,17 +186,14 @@ app.get('/years', function(request, response) {
 
    //Set the query text
    var queryParams;
-   if (userRole == 'alpha_GB_Instructor')
-   {
+   if(userRole == 'alpha_GB_Instructor') {
       queryText = 'SELECT Year FROM getInstructorYears($1);';
       queryParams = [userID];
-   } 
-   else if (userRole == 'alpha_GB_Student')
-   {
+   }
+   else if(userRole == 'alpha_GB_Student') {
       queryText = 'SELECT Year FROM getYearsAsStudent();';
    }
-   else
-   {
+   else {
       queryText = 'SELECT DISTINCT year FROM term;';
    }
 
@@ -233,8 +239,8 @@ app.get('/seasons', function(request, response) {
       queryText = 'SELECT SeasonOrder, SeasonName FROM getSeasonsAsStudent();';
    }
    else {
-      queryText = 'SELECT S."Order", S.Name FROM term T JOIN season S ON ' +
-                  'T.season = S."Order" WHERE T.Year = $1;';
+      queryText = 'SELECT S."Order" AS SeasonOrder, S.Name AS SeasonName FROM' + 
+                  ' term T JOIN season S ON T.season = S."Order" WHERE T.Year = $1;';
       queryParams = [year];
    }
 
@@ -267,12 +273,24 @@ app.get('/courses', function(request, response) {
    var config = createConnectionParams(request.query.user, request.query.database,
       passwordText, request.query.host, request.query.port);
 
-   var instructorID = request.query.instructorid;
+   var userID = request.query.userid;
    var year = request.query.year;
    var seasonOrder = request.query.seasonorder;
+   var userRole = request.query.userRole;
 
-   var queryText = 'SELECT Course FROM getInstructorCourses($1, $2, $3);';
-   var queryParams = [instructorID, year, seasonOrder];
+   if(userRole == 'instructor') {
+      var queryText = 'SELECT Course FROM getInstructorCourses($1, $2, $3);';
+      var queryParams = [userID, year, seasonOrder];
+
+   }
+   else if(userRole == 'student') {
+      var queryText = 'SELECT SectionID, SectionNumber FROM getStudentCourses($1, $2, $3, $4);';
+      var queryParams = [userID, year, seasonOrder, courseNumber];
+   }
+   else {
+      response.status(400).send('400 - Unknown user role');
+      return;
+   }
 
    executeQuery(response, config, queryText, queryParams, function(result) {
       var courses = [];
@@ -287,7 +305,7 @@ app.get('/courses', function(request, response) {
 
 });
 
-//Returns a list of sesctions an instructor taught in a certain term
+//Returns a list of sections a user has participated in during certain term
 app.get('/sections', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
@@ -297,13 +315,26 @@ app.get('/sections', function(request, response) {
    var config = createConnectionParams(request.query.user, request.query.database,
       passwordText, request.query.host, request.query.port);
 
-   var instructorID = request.query.instructorid;
+   var userID = request.query.userid;
    var year = request.query.year;
    var seasonOrder = request.query.seasonorder;
    var courseNumber = request.query.coursenumber;
+   var userRole = request.query.userRole;
 
-   var queryText = 'SELECT SectionID, SectionNumber FROM getInstructorSections($1, $2, $3, $4);';
+   if(userRole == 'instructor') {
+   var queryText = 'SELECT SectionID, Course, GIS.SectionNumber, Title,' +
+                   ' Schedule, Location, Instructors FROM' +
+                   ' getInstructorSections($1, $2, $3, $4) GIS,' +
+                   ' getSection(GIS.sectionID);';
    var queryParams = [instructorID, year, seasonOrder, courseNumber];
+   }
+   else if(userRole == 'student') {
+      console.log("Student sections not yet implemented");
+   }
+   else {
+      response.status(400).send('400 - Unknown user role');
+      return;
+   }
 
    executeQuery(response, config, queryText, queryParams, function(result) {
       var sections = [];
@@ -311,7 +342,12 @@ app.get('/sections', function(request, response) {
          sections.push(
             {
                "sectionid": result.rows[row].sectionid,
-               "sectionnumber": result.rows[row].sectionnumber
+               "sectioncourse": result.rows[row].course,
+               "sectionnumber": result.rows[row].sectionnumber,
+               "sectiontitle": result.rows[row].title,
+               "sectionschedule" : result.rows[row].schedule,
+               "sectionlocation" : result.rows[row].location,
+               "sectioninstructors" : result.rows[row].instructors
             }
          );
       }
@@ -341,7 +377,7 @@ app.get('/sectionschedule', function(request, response) {
 
    executeQuery(response, config, queryText, queryParams, function(result) {
       for(row in result.rows) {
-         closedDates.push( result.rows[row].date);
+         closedDates.push(result.rows[row].date);
       }
    });
 
@@ -351,8 +387,7 @@ app.get('/sectionschedule', function(request, response) {
    executeQuery(response, config, queryText, queryParams, function(result) {
       var classDates = [];
       for(row in result.rows) {
-         if(!closedDates.includes(result.rows[row].date))
-         {
+         if(!closedDates.includes(result.rows[row].date)) {
             classDates.push(result.rows[row].date);
          }
       }
@@ -378,9 +413,9 @@ app.get('/sectionreport', function(request, response) {
    var offset = request.query.offset;
 
    var queryText = "SELECT getTermCourseCount(getTermID($1, $2)) AS CourseCount, " +
-                    "getTermSectionCount(getTermID($1, $2)) AS SectionCount, " +
-                    "getTermInstructorCount(getTermID($1, $2)) AS InstructorCount, " +
-                    "getTermStudentCount(getTermID($1, $2)) AS StudentCount;";
+      "getTermSectionCount(getTermID($1, $2)) AS SectionCount, " +
+      "getTermInstructorCount(getTermID($1, $2)) AS InstructorCount, " +
+      "getTermStudentCount(getTermID($1, $2)) AS StudentCount;";
    var queryParams = [year, seasonCode];
 
    executeQuery(response, config, queryText, queryParams, function(result) {
@@ -390,7 +425,7 @@ app.get('/sectionreport', function(request, response) {
       var studentCount = result.rows[0].studentcount;
 
       queryText = "SELECT * FROM getTermSectionsReport(getTermID($1, $2)) " +
-                  "ORDER BY Course ASC, SectionNumber ASC LIMIT $3 OFFSET $4;";
+         "ORDER BY Course ASC, SectionNumber ASC LIMIT $3 OFFSET $4;";
       queryParams = [year, seasonCode, limit, offset];
 
       executeQuery(response, config, queryText, queryParams, function(result) {
@@ -402,7 +437,7 @@ app.get('/sectionreport', function(request, response) {
             "Sections": []
          };
 
-         for (row in result.rows) {
+         for(row in result.rows) {
             jsonReturn.Sections.push(result.rows[row]);
          }
 
