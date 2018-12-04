@@ -42,11 +42,13 @@ const monthNames = [
 var pg = require('pg'); //Postgres client module               | https://github.com/brianc/node-postgres
 var sjcl = require('sjcl'); //Encryption module                | https://github.com/bitwiseshiftleft/sjcl
 var express = require('express'); //Express module             | https://github.com/expressjs/express
+
 var fs = require('fs'); //File System module                   | https://nodejs.org/api/fs.html
 var copyFrom = require('pg-copy-streams').from; //Copy Module  | https://github.com/brianc/node-pg-copy-streams
 var Readable = require('stream').Readable //for converting strings to streams
 
 var app = express();
+app.use(express.urlencoded({extended: false}));
 
 /*
 This function creates and returns a config object for the pg module based on some
@@ -547,15 +549,17 @@ app.get('/attendance', function(request, response) {
 app.post('/importSectionRoster', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
-   var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
+   var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.body.password));
 
    //Connnection parameters for the Postgres client recieved in the request
-   var config = createConnectionParams(request.query.user, request.query.database,
-      passwordText, request.query.host, request.query.port);
+   var config = createConnectionParams(request.body.user, request.body.database,
+      passwordText, request.body.host, request.body.port);
+
    var client = new pg.Client(config); //Connect to pg instance
 
    //Get file from client
-   var file = request.query.file;
+   var file = request.body.data;
+   
    //Convert file to stream
    var fstream = new Readable;
    fstream.push(file);
