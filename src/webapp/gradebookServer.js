@@ -136,7 +136,7 @@ app.get('/login', function(request, response) {
    var queryParams;
    
    if (request.query.userRole == 'instructor') {
-      queryText = "SELECT getInstructorIDByIssuedID($1)";
+      queryText = "SELECT * FROM getInstructor(getInstructorIDByIssuedID($1));";
       queryParams = [request.query.user];
    }
    else if (request.query.userRole == 'student') {
@@ -156,7 +156,13 @@ app.get('/login', function(request, response) {
       }
       else {
          var jsonReturn = {
-            "user": result.rows[0] //getInstructors should return at most one row
+            "user": {
+               "fname": result.rows[0].fname,
+               "mname": result.rows[0].mname,
+               "lname": result.rows[0].lname,
+               "dept": result.rows[0].department,
+               "email": result.rows[0].email
+            } 
          };
          response.send(JSON.stringify(jsonReturn));
       }
