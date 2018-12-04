@@ -157,36 +157,55 @@ Currently, only attendance information is served
 	</div>
 	
 	<div id="attendance">
+
+	<div id="sectionListing" class="section">
 	<div class="row">
-		<div class="input-field col s12 m6 l3">
+		<h4 class="col s6 m3 l3">Sections</h4>
+		<div class="input-field col s6 m3 l3">
 			<select id="yearSelect" disabled="true">
 				<option value="" disabled="true" selected="true">Choose year</option>
 			</select>
 			<label>Year</label>
 		</div>
-		<div class="input-field col s12 m6 l3">
+		<div class="input-field col s6 m3 l3">
 			<select id="seasonSelect" disabled="true">
 				<option value="" disabled="true" selected="true">Choose season</option>
 			</select>
 			<label>Season</label>
 		</div>
-		<div class="input-field col s12 m6 l3">
-			<select id="courseSelect" disabled="true">
-				<option value="" disabled="true" selected="true">Choose course</option>
-			</select>
-			<label>Course</label>
+	</div>
+	<table id="sectionListingTable" style="display: none" class="highlight">
+		<thead>
+			<tr>
+			  <th>Course</th>
+			  <th>Section</th>
+			  <th>Title</th>
+			  <th>Schedule</th>
+			  <th>Location</th>
+			  <th>Instructors</th>
+			</tr>
+		  </thead>
+		  <tbody id="sectionListBody"></tbody>
+	</table>
+	</div>
+
+	<div id="currentSelection" style="display: none">
+	<div class="row">
+		<div id="currentSection" class="col s9 m10 l11">
+			<!-- Intended to hold a short description of what is being displayed -->
 		</div>
-		<div class="input-field col s12 m6 l3">
-			<select id="sectionSelect" disabled="true">
-				<option value="" disabled="true" selected="true">Choose section</option>
-			</select>
-			<label>Section</label>
+		<div id="returnToSelection-wrapper" class="col s3 m2 l1">
+			<a id="btnReturnToSelect"
+			 class="btn-floating waves-effect waves-light teal lighten-2 tooltipped"
+			 data-position="bottom" data-delay="50" data-tooltip="Return to selection">
+				<i class="material-icons">list</i>
+			</a>
 		</div>
 	</div>
+	</div>
 	
-	<div class="divider"></div>
-	
-	<ul id="attnOptionsBox" class="collapsible" style="display: none" data-collapsible="expandable">
+	<div id="attnOptionsBox-wrapper" style="display: none">
+	<ul id="attnOptionsBox" class="collapsible" data-collapsible="expandable">
 	<li>
 		<div class="collapsible-header">
 			<i id="optionsArrow" class="material-icons">keyboard_arrow_down</i>Options
@@ -210,9 +229,10 @@ Currently, only attendance information is served
 		</div>
 	</li>
 	</ul>
+	</div>
 	
 	<br/>
-	<div id="attendanceData" class="col s12" style="overflow-x:auto">
+	<div id="attendanceData" class="col s12" style="overflow-x:auto; display:none;">
 		<!--Populated dynamically-->
 	</div>
 	
