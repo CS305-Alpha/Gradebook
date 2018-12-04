@@ -230,8 +230,8 @@ app.get('/seasons', function(request, response) {
       queryText = 'SELECT SeasonOrder, SeasonName FROM getSeasonsAsStudent();';
    }
    else {
-      queryText = 'SELECT S."Order", S.Name FROM term T JOIN season S ON ' +
-         'T.season = S."Order" WHERE T.Year = $1;';
+      queryText = 'SELECT S."Order" AS SeasonOrder, S.Name AS SeasonName FROM' + 
+                  ' term T JOIN season S ON T.season = S."Order" WHERE T.Year = $1;';
       queryParams = [year];
    }
 
@@ -313,12 +313,14 @@ app.get('/sections', function(request, response) {
    var userRole = request.query.userRole;
 
    if(userRole == 'instructor') {
-      var queryText = 'SELECT SectionID, SectionNumber FROM getInstructorSections($1, $2, $3, $4);';
-      var queryParams = [userID, year, seasonOrder, courseNumber];
+   var queryText = 'SELECT SectionID, Course, GIS.SectionNumber, Title,' +
+                   ' Schedule, Location, Instructors FROM' +
+                   ' getInstructorSections($1, $2, $3, $4) GIS,' +
+                   ' getSection(GIS.sectionID);';
+   var queryParams = [instructorID, year, seasonOrder, courseNumber];
    }
    else if(userRole == 'student') {
-      var queryText = 'SELECT SectionID, SectionNumber FROM getStudentSections($1, $2, $3, $4);';
-      var queryParams = [userID, year, seasonOrder, courseNumber];
+      console.log("Student sections not yet implemented");
    }
    else {
       response.status(400).send('400 - Unknown user role');
@@ -331,7 +333,12 @@ app.get('/sections', function(request, response) {
          sections.push(
             {
                "sectionid": result.rows[row].sectionid,
-               "sectionnumber": result.rows[row].sectionnumber
+               "sectioncourse": result.rows[row].course,
+               "sectionnumber": result.rows[row].sectionnumber,
+               "sectiontitle": result.rows[row].title,
+               "sectionschedule" : result.rows[row].schedule,
+               "sectionlocation" : result.rows[row].location,
+               "sectioninstructors" : result.rows[row].instructors
             }
          );
       }
