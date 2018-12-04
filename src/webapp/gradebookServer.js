@@ -44,6 +44,7 @@ var sjcl = require('sjcl'); //Encryption module                | https://github.
 var express = require('express'); //Express module             | https://github.com/expressjs/express
 var fs = require('fs'); //File System module                   | https://nodejs.org/api/fs.html
 var copyFrom = require('pg-copy-streams').from; //Copy Module  | https://github.com/brianc/node-pg-copy-streams
+var Readable = require('stream').Readable //for converting strings to streams
 
 var app = express();
 
@@ -551,37 +552,44 @@ app.post('/importSectionRoster', function(request, response) {
    //Connnection parameters for the Postgres client recieved in the request
    var config = createConnectionParams(request.query.user, request.query.database,
       passwordText, request.query.host, request.query.port);
+   var client = new pg.Client(config); //Connect to pg instance
 
    //Get file from client
    var file = request.query.file;
+   //Convert file to stream
+   var fstream = new Readable;
+   fstream.push(file);
+   fstream.push(null); //terminate stream
 
    //Pipe from file into staging table
-   pg.connect(function(err, client, done) {
+   client.connect(function(err, client, done) {
       if(err) {
          console.log(err);
       } else {
-         var stream = client.query(copyFrom('Copy RosterStaging FROM STDIN'));
-         var fileStream = fs.createReadStream(file);
-         fileStream.on('error', done);
-         stream.on('error', done);
-         stream.on('end', done);
-         fileStream.pipe(stream);
+         var stream = client.query(copyFrom('COPY RosterStaging FROM STDIN WITH CSV HEADER'));
+         fstream.on('error', function(error) {
+            console.log("Error interpreting/reading roster data: " + JSON.stringify(error));
+         });
+         stream.on('error', function(error) {
+            console.log("Error COPYing data to Postgres: " + JSON.stringify(error));
+         });
+         stream.on('end', function() {
+            //Setup for function importRoster
+            var queryText = 'SELECT * FROM importRoster();';
+            var queryParams = [];
+
+            executeQuery(response, config, queryText, queryParams, function(result) {
+               //Set queryText to Truncate the RosterStaging table
+               queryText = 'TRUNCATE TABLE RosterStaging;';
+               queryParams = [];
+
+               executeQuery(response, config, queryText, queryParams, function(result) {
+                  response.send(result);
+               });
+            });
+         });
+         fstream.pipe(stream);
       }
-   });
-
-   //Setup for function importRoster
-   var queryText = 'SELECT * FROM importRoster();';
-   var queryParams = [];
-
-   executeQuery(response, config, queryText, queryParams, function(result) {
-   });
-
-   //Set queryText to Truncate the RosterStaging table
-   queryText = 'TRUNCATE TABLE RosterStaging;';
-   queryParams = [];
-
-   executeQuery(response, config, queryText, queryParams, function(result) {
-      response.send(result);
    });
 });
 
