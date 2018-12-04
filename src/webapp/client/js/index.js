@@ -24,7 +24,7 @@ Currently, a globally scoped variable is used to store login information.
 var dbInfo = {
 	"host":null, "port":null, "database":null, "user":null, "password":null
 };
-var instInfo = { "fname":null, "mname":null, "lname": null, "dept":null };
+var userInfo = { "fname":null, "mname":null, "lname": null};
 
 /* 
 Each instance of connInfo as a parameter in a function definition refers to an 
@@ -117,12 +117,12 @@ $(document).ready(function() {
 	
 	$('#logout').click(function() {
 		dbInfo = null;
-		instInfo = null;
+		userInfo = null;
 		setYears(null); //reset Attendance dropdowns
 		
 		//hide and reset profile
 		$('#profile').css('display', 'none');
-		$('#instName').html('');
+		$('#givenName').html('');
 		
 		//show Login tab, hide Roster, Attendance, Grades, and Reports tabs
 		$('#loginTab').css('display', 'inline');
@@ -132,7 +132,8 @@ $(document).ready(function() {
 
 	$('#uploadBtn').click(function()
 	{
-		var file = document.getElementById('#rosterImport').files[0];
+		dbInfo = getDBFields();
+		var file = document.getElementById('rosterImport').files[0];
 		var reader = new FileReader();
 		reader.readAsText(file, 'UTF-8');
 		reader.onload = uploadRoster;
@@ -142,9 +143,10 @@ $(document).ready(function() {
 
 function uploadRoster(event){
 	var result = event.target.result;
-    var fileName = document.getElementById('#rosterImport').files[0].name;
-	
-	$.post('/importSectionRoster', { data: result, name: fileName }, showAlert("<p>Upload Successful.</p>"));
+    var fileName = document.getElementById('rosterImport').files[0].name;
+
+	var data = $.extend({}, dbInfo, {data: result}, {name: fileName});
+	$.post('/importSectionRoster', data, showAlert("<p>Upload Successful.</p>"));
 	
 };
 
@@ -173,27 +175,25 @@ function getDBFields() {
 
 function serverLogin(connInfo, email, callback) {
 	var userRole = $('#roleSelect option:selected').val()
-	//"create a copy" of connInfo with instructoremail and set to urlParams
+	//"create a copy" of connInfo with user's group role and set to urlParams
 	var urlParams = $.extend({}, connInfo, {userRole:userRole}); 
 	$.ajax('login', {
 		dataType: 'json',
 		data: urlParams ,
 		success: function(result) {
-			//populate dbInfo and instInfo with info from response
-			dbInfo.instructorid = result.instructor.id;
-			instInfo = { fname:result.instructor.fname, 
-			mname:result.instructor.mname, lname:result.instructor.lname,
-			dept:result.instructor.department };
+			//populate dbInfo and userInfo with info from response
+			userInfo = { fname:result.user.fname, 
+			mname:result.user.mname, lname:result.user.lname};
 			
 			//hide Login tab, show Roster, Attendance, Grades, and Reports tabs
 			$('#loginTab').css('display', 'none');
 			$('#rosterTab, #attnTab, #gradesTab, #reportsTab').css('display', 'inline');
 			$('ul.tabs').tabs('select_tab', 'attendance');
 			
-			//populate instructor name and display profile (including logout menu)
+			//populate user given name and display profile (including logout menu)
 			//Array.prototype.join is used because in JS: '' + null = 'null'
-			var instName = [instInfo.fname, instInfo.mname, instInfo.lname].join(' ');
-			$('#instName').html(instName);
+			var userName = [userInfo.fname, userInfo.mname, userInfo.lname].join(' ');
+			$('#givenName').html(userName);
 			$('#profile').css('display', 'inline');
 			
 			callback();
