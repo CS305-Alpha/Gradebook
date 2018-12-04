@@ -132,7 +132,8 @@ $(document).ready(function() {
 
 	$('#uploadBtn').click(function()
 	{
-		var file = document.getElementById('#rosterImport').files[0];
+		dbInfo = getDBFields();
+		var file = document.getElementById('rosterImport').files[0];
 		var reader = new FileReader();
 		reader.readAsText(file, 'UTF-8');
 		reader.onload = uploadRoster;
