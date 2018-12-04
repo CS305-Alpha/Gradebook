@@ -371,7 +371,7 @@ function getStudentCourses(connInfo, year, seasonorder, userrole) {
 		dataType: 'json',
 		data: urlParams,
 		success: function(result) {
-			return result;
+			//TODO: Implement population of calendar
 		},
 		error: function(result) {
 			showAlert('<p>Error while retrieving courses</p>');
