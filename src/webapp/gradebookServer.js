@@ -51,10 +51,13 @@ const monthNames = [
 var pg = require('pg'); //Postgres client module               | https://github.com/brianc/node-postgres
 var sjcl = require('sjcl'); //Encryption module                | https://github.com/bitwiseshiftleft/sjcl
 var express = require('express'); //Express module             | https://github.com/expressjs/express
+
 var fs = require('fs'); //File System module                   | https://nodejs.org/api/fs.html
 var copyFrom = require('pg-copy-streams').from; //Copy Module  | https://github.com/brianc/node-pg-copy-streams
+var Readable = require('stream').Readable //for converting strings to streams
 
 var app = express();
+app.use(express.urlencoded({extended: false}));
 
 /*
 This function creates and returns a config object for the pg module based on some
@@ -142,11 +145,11 @@ app.get('/login', function(request, response) {
    var queryParams;
    
    if (request.query.userRole == 'instructor') {
-      queryText = "SELECT getInstructorIDByIssuedID($1)";
+      queryText = "SELECT * FROM getInstructor(getInstructorIDByIssuedID($1));";
       queryParams = [request.query.user];
    }
    else if (request.query.userRole == 'student') {
-      queryText = "SELECT getMyStudentID();"; //causes a 500 error rather 401
+      queryText = "SELECT * FROM getStudentAsStudent();"; //causes a 500 error rather 401 //TODO: need to get info, not just validate
    }
    else {
       response.status(400).send('400 - Unknown user role');
@@ -162,7 +165,13 @@ app.get('/login', function(request, response) {
       }
       else {
          var jsonReturn = {
-            "user": result.rows[0] //getInstructors should return at most one row
+            "user": {
+               "fname": result.rows[0].fname,
+               "mname": result.rows[0].mname,
+               "lname": result.rows[0].lname,
+               "dept": result.rows[0].department,
+               "email": result.rows[0].email
+            } 
          };
          response.send(JSON.stringify(jsonReturn));
       }
@@ -581,42 +590,51 @@ app.get('/attendance', function(request, response) {
 app.post('/importSectionRoster', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
-   var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
+   var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.body.password));
 
    //Connnection parameters for the Postgres client recieved in the request
-   var config = createConnectionParams(request.query.user, request.query.database,
-      passwordText, request.query.host, request.query.port);
+   var config = createConnectionParams(request.body.user, request.body.database,
+      passwordText, request.body.host, request.body.port);
+
+   var client = new pg.Client(config); //Connect to pg instance
 
    //Get file from client
-   var file = request.query.file;
+   var file = request.body.data;
+   
+   //Convert file to stream
+   var fstream = new Readable;
+   fstream.push(file);
+   fstream.push(null); //terminate stream
 
    //Pipe from file into staging table
-   pg.connect(function(err, client, done) {
+   client.connect(function(err, client, done) {
       if(err) {
          console.log(err);
       } else {
-         var stream = client.query(copyFrom('Copy RosterStaging FROM STDIN'));
-         var fileStream = fs.createReadStream(file);
-         fileStream.on('error', done);
-         stream.on('error', done);
-         stream.on('end', done);
-         fileStream.pipe(stream);
+         var stream = client.query(copyFrom('COPY RosterStaging FROM STDIN WITH CSV HEADER'));
+         fstream.on('error', function(error) {
+            console.log("Error interpreting/reading roster data: " + JSON.stringify(error));
+         });
+         stream.on('error', function(error) {
+            console.log("Error COPYing data to Postgres: " + JSON.stringify(error));
+         });
+         stream.on('end', function() {
+            //Setup for function importRoster
+            var queryText = 'SELECT * FROM importRoster();';
+            var queryParams = [];
+
+            executeQuery(response, config, queryText, queryParams, function(result) {
+               //Set queryText to Truncate the RosterStaging table
+               queryText = 'TRUNCATE TABLE RosterStaging;';
+               queryParams = [];
+
+               executeQuery(response, config, queryText, queryParams, function(result) {
+                  response.send(result);
+               });
+            });
+         });
+         fstream.pipe(stream);
       }
-   });
-
-   //Setup for function importRoster
-   var queryText = 'SELECT * FROM importRoster();';
-   var queryParams = [];
-
-   executeQuery(response, config, queryText, queryParams, function(result) {
-   });
-
-   //Set queryText to Truncate the RosterStaging table
-   queryText = 'TRUNCATE TABLE RosterStaging;';
-   queryParams = [];
-
-   executeQuery(response, config, queryText, queryParams, function(result) {
-      response.send(result);
    });
 });
 
