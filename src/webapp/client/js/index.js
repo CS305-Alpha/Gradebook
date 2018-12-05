@@ -25,8 +25,7 @@ var dbInfo = {
 	"host":null, "port":null, "database":null, "user":null, "password":null
 };
 
-var userInfo = { "fname":null, "mname":null, "lname": null};
-
+var userInfo = {"id": null, "fname":null, "mname":null, "lname": null, "role": null};
 
 var displayedSection = {"id":null, "sectioncourse":null, "sectionnumber":null,
 	"sectiontitle":null, "sectionschedule":null, "sectionlocation":null,
@@ -112,19 +111,56 @@ $(document).ready(function() {
 	$('#seasonSelect').change(function() {
 		var year = $('#yearSelect').val();
 		var season = $('#seasonSelect').val();
-		listCourses(dbInfo, user, year, season);
+		listCourses(dbInfo, year, season);
 	});
 
-	$('#courseSelect').change(function() {
-		var year = $('#yearSelect').val();
-		var season = $('#seasonSelect').val();
-		var course = $('#courseSelect').val();
-		popSections(dbInfo, year, season, course);
-	});
+  var secReportOffset = 0;
+  var secReportLimit = 100;
+  $('#btnReportLeft').click(function() {
+	  secReportOffset -= secReportLimit;
 
-	$('#sectionSelect').change(function() {
-		var sectionID = $('#sectionSelect').val();
-		popAttendance(dbInfo, sectionID);
+	  if (secReportOffset < 0) {
+		  secReportOffset = 0;
+	  }
+
+	  $('#btnLoadSections').click();
+  });
+
+  $('#btnReportRight').click(function() {
+	  secReportOffset += secReportLimit;
+
+	  if (secReportOffset > sectionReportObj.SectionCount - secReportLimit) {
+		  secReportOffset = sectionReportObj.SectionCount - secReportLimit;
+	  }
+
+	  $('#btnLoadSections').click();
+  });
+
+  $('#btnLoadSections').click(function() {
+	  console.log("CourseCount: " + sectionReportObj.CourseCount);
+	  var secReportRows = "";
+
+	  $('#secReportoffset').html((secReportOffset + 1));
+
+	  var lastSection = secReportOffset + secReportLimit;
+	  if (lastSection > sectionReportObj.SectionCount) {
+		  lastSection = sectionReportObj.SectionCount;
+	  }
+
+	  $('#secReportOffsetWLimit').html(lastSection);
+	  $('#secReportTotal').html(sectionReportObj.SectionCount);
+
+	  for(var i = 0; i < sectionReportObj.Sections.length; i++) {
+		  secReportRows += '<tr>';
+		  secReportRows += '<td>' + sectionReportObj.Sections[i].course + '</td>';
+		  secReportRows += '<td>' + sectionReportObj.Sections[i].sectionnumber + '</td>';
+		  secReportRows += '<td>' + sectionReportObj.Sections[i].title + '</td>';
+		  secReportRows += '<td>' + sectionReportObj.Sections[i].schedule + '</td>';
+		  secReportRows += '<td>' + sectionReportObj.Sections[i].location + '</td>';
+		  secReportRows += '<td>' + sectionReportObj.Sections[i].instructors + '</td>';
+		  secReportRows += '</tr>';
+	  }
+	  $('#secReportListingBody').html(secReportRows);
   });
   
 	$('#btnReturnToSelect').click(function() {
@@ -155,7 +191,7 @@ $(document).ready(function() {
 		
 		//show Login tab, hide Roster, Attendance, Grades, and Reports tabs
 		$('#loginTab').css('display', 'inline');
-		$('#rosterTab, #attnTab, #gradesTab, #reportsTab').css('display', 'none');
+		$('#rosterTab, #attnTab, #gradesTab, #reportsTab, #sectionReportTab').css('display', 'none');
 		$('ul.tabs').tabs('select_tab', 'login');
 	});
 
@@ -204,30 +240,28 @@ function getDBFields() {
 };
 
 function serverLogin(connInfo, email, callback) {
-	var userRole = $('#roleSelect option:selected').val()
+	userInfo.role = $('#roleSelect option:selected').val();
 
 	//"create a copy" of connInfo with user's group role and set to urlParams
-	var urlParams = $.extend({}, connInfo, {userRole:userRole}); 
+	var urlParams = $.extend({}, connInfo, {userRole:userInfo.role}); 
 
 	$.ajax('login', {
 		dataType: 'json',
 		data: urlParams,
 		success: function(result) {
-
 			//populate dbInfo and userInfo with info from response
-			userInfo = { fname:result.user.fname, 
+			userInfo = { id:result.user.id, fname:result.user.fname, 
 			mname:result.user.mname, lname:result.user.lname};
-			
 
 			//hide Login tab, show Roster, Attendance, Grades, and Reports tabs
 			$('#loginTab').css('display', 'none');
-			$('#rosterTab, #attnTab, #gradesTab, #reportsTab').css('display', 'inline');
+			$('#rosterTab, #attnTab, #gradesTab, #reportsTab, #sectionReportTab').css('display', 'inline');
 			$('ul.tabs').tabs('select_tab', 'attendance');
 			
 			//populate user given name and display profile (including logout menu)
 			//Array.prototype.join is used because in JS: '' + null = 'null'
-			var userName = [userInfo.fname, userInfo.mname, userInfo.lname].join(' ');
-			$('#givenName').html(userName);
+			var givenName = [userInfo.fname, userInfo.mname, userInfo.lname].join(' ');
+			$('#givenName').html(givenName);
 			$('#profile').css('display', 'inline');
 
 			callback();
@@ -314,10 +348,12 @@ function popAttendance(connInfo, section) {
 	});
 };
 
-function listCourses(connInfo, user, year, seasonorder) {
+function listCourses(connInfo, year, seasonorder) {
 	$('#sectionListBody').html(''); //clear list of sections
 	$('#sectionListingTable').slideDown('slow');
-	var urlParams = $.extend({}, connInfo, {year:year, seasonorder:seasonorder});
+
+	var userRole = $('#roleSelect option:selected').val();
+	var urlParams = $.extend({}, connInfo, {userid:userInfo.id, year:year, seasonorder:seasonorder, userRole:userRole});
 
 	//promises would be helpful here to avoid having 7 levels of indentation
 	$.ajax('courses', {
@@ -326,11 +362,10 @@ function listCourses(connInfo, user, year, seasonorder) {
 		success: function(result) {
 			result.courses.sort();
 			for (var i = 0; i < result.courses.length; i++) {
-				 var urlParams = $.extend({}, connInfo, {year:year, seasonorder:seasonorder,
-					coursenumber:result.courses[i]});
+				 var sectionParams = $.extend({}, urlParams, {coursenumber:result.courses[i]});
 				$.ajax('sections', {
 					dataType: 'json',
-					data: urlParams,
+					data: sectionParams,
 					success: function(result) {
 						addResultToSectionList(result)
 					},
@@ -437,6 +472,7 @@ function setAttendance(htmlText) {
 };
 
 // Returns list of courses for a given user id
+/*
 function getStudentCourses(connInfo, year, seasonorder, userrole) {
 	var urlParams = $.extend({}, connInfo, {year: year, seasonorder: seasonorder, userrole: userrole});
 	$.ajax('courses', {
@@ -497,3 +533,4 @@ function getStudentCourses(connInfo, sectionid) {
 		}
 	});
 };
+*/
