@@ -249,6 +249,7 @@ GRANT EXECUTE ON FUNCTION getTermInstructorCount(termID INT) TO alpha_GB_Webapp,
 CREATE OR REPLACE FUNCTION getTermSectionsReport(termID INT)
 RETURNS TABLE (Course VARCHAR(8),
                SectionNumber VARCHAR(3),
+               Title VARCHAR(100),
                CRN VARCHAR(5),
                Schedule VARCHAR(7),
                Location VARCHAR(25),
@@ -258,10 +259,10 @@ RETURNS TABLE (Course VARCHAR(8),
                Instructors VARCHAR
               ) AS
 $$
-   SELECT course, sectionnumber, crn, schedule, location, startdate, enddate,
-   midtermdate, COALESCE(getInstructorName(instructor1),' ') ||
+   SELECT course, sectionnumber, title, crn, schedule, location, startdate, 
+   enddate, midtermdate, COALESCE(getInstructorName(instructor1),' ') ||
                 COALESCE(', ' || getInstructorName(instructor2),' ') ||
-                COALESCE(', ' || getInstructorName(instructor3)) instructors
+                COALESCE(', ' || getInstructorName(instructor3), '') instructors
    FROM section WHERE term = $1;
 $$ LANGUAGE sql
    SECURITY DEFINER
