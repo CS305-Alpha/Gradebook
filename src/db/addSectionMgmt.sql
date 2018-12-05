@@ -231,8 +231,8 @@ $$
    SELECT s.term, s.course, s.sectionnumber, s.title, s.crn, s.schedule,
       s.location, s.startdate, s.enddate, s.midtermdate,
       COALESCE(getInstructorName(s.instructor1),'') ||
-      COALESCE(', ' || getInstructorName(s.instructor2),'') ||
-      COALESCE(', ' || getInstructorName(s.instructor3),'')
+      COALESCE('; ' || getInstructorName(s.instructor2),'') ||
+      COALESCE('; ' || getInstructorName(s.instructor3),'')
    FROM section s
    WHERE s.id = $1;
 $$ LANGUAGE sql

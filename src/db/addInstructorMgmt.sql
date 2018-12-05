@@ -377,8 +377,8 @@ CREATE OR REPLACE FUNCTION getInstructorName(instructorID INT)
 RETURNS VARCHAR
 AS
 $$
-    SELECT COALESCE(fname,'') || COALESCE(', ' || mname,'') ||
-       COALESCE(', ' || lname,'')
+    SELECT COALESCE(fname,'') || COALESCE(' ' || mname,'') ||
+       COALESCE(' ' || lname,'')
     FROM Instructor
     WHERE id = $1;
 $$ LANGUAGE sql
