@@ -164,16 +164,30 @@ app.get('/login', function(request, response) {
          response.status(401).send('401 - Login failed');
       }
       else {
-         var jsonReturn = {
-            "user": {
-               "id": result.rows[0].getinstructoridbyissuedid,
-               "fname": result.rows[0].fname,
-               "mname": result.rows[0].mname,
-               "lname": result.rows[0].lname,
-               "dept": result.rows[0].department,
-               "email": result.rows[0].email
-            } 
-         };
+         if (request.query.userRole == 'instructor') {
+            var jsonReturn = {
+               "user": {
+                  "id": result.rows[0].getinstructoridbyissuedid,
+                  "fname": result.rows[0].fname,
+                  "mname": result.rows[0].mname,
+                  "lname": result.rows[0].lname,
+                  "dept": result.rows[0].department,
+                  "email": result.rows[0].email
+               } 
+            };
+         }
+         else if (request.query.userRole == 'student') {
+            var jsonReturn = {
+               "user": {
+                  "id": result.rows[0].id,
+                  "fname": result.rows[0].fname,
+                  "mname": result.rows[0].mname,
+                  "lname": result.rows[0].lname,
+                  "dept": result.rows[0].department,
+                  "email": result.rows[0].email
+               } 
+            };
+         }
          response.send(JSON.stringify(jsonReturn));
       }
    });
@@ -295,8 +309,8 @@ app.get('/courses', function(request, response) {
 
    }
    else if(userRole == 'student') {
-      var queryText = 'SELECT SectionID, SectionNumber FROM getStudentCourses($1, $2, $3, $4);';
-      var queryParams = [userID, year, seasonOrder, courseNumber];
+      var queryText = 'SELECT DISTINCT Course FROM getStudentSections($1, $2, $3);';
+      var queryParams = [userID, year, seasonOrder];
    }
    else {
       response.status(400).send('400 - Unknown user role');
@@ -334,14 +348,18 @@ app.get('/sections', function(request, response) {
    var userRole = request.query.userRole;
 
    if(userRole == 'instructor') {
-   var queryText = 'SELECT SectionID, Course, GIS.SectionNumber, Title,' +
+      var queryText = 'SELECT SectionID, Course, GIS.SectionNumber, Title,' +
                    ' Schedule, Location, Instructors FROM' +
                    ' getInstructorSections($1, $2, $3, $4) GIS,' +
                    ' getSection(GIS.sectionID);';
-   var queryParams = [userID, year, seasonOrder, courseNumber];
+      var queryParams = [userID, year, seasonOrder, courseNumber];
    }
    else if(userRole == 'student') {
-      console.log("Student sections not yet implemented");
+      var queryText = 'SELECT SectionID, Course, GSS.SectionNumber, Title,' +
+                      ' Schedule, Location, Instructors FROM' +
+                      ' getStudentSections($1, $2, $3, $4) GSS,' +
+                      ' getSection(GSS.sectionID);';
+      var queryParams = [userID, year, seasonOrder, courseNumber];
    }
    else {
       response.status(400).send('400 - Unknown user role');
