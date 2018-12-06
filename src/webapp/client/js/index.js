@@ -198,16 +198,11 @@ $(document).ready(function() {
 			$('#secReportListingBody').html('');
 			popSecReport(dbInfo, year, season, secReportOffset, secReportLimit, function(termSummary) {
 				secReportCount = termSummary.SectionCount;
-
-				$('#secReportoffset').html((secReportOffset + 1));
 		
 				var lastSection = secReportOffset + secReportLimit;
 				if (lastSection > secReportCount) {
 					lastSection = secReportCount;
 				}
-			
-				$('#secReportOffsetWLimit').html(lastSection);
-				$('#secReportTotal').html(secReportCount);
 
 				var summary = '';
 				summary += '<h4>' + $('#secReportSeason option:selected').text() + ' ' + year + "</h4>";
@@ -548,7 +543,16 @@ function popSecReport(conninfo, year, season, offset, limit, callback) {
 				secReportRows += '</tr>';
 			}
 		
+			var lastSection = offset + limit;
+			if (lastSection > result.SectionCount) {
+				lastSection = result.SectionCount;
+			}
+			secReportCount = result.SectionCount;
+
 			$('#secReportListingBody').html(secReportRows);
+			$('#secReportOffsetDisp').html(offset + 1);
+			$('#secReportOffsetWLimit').html(lastSection);
+			$('#secReportTotal').html(secReportCount);
 		
 			if (typeof(callback) === 'function') {
 				var termSummary = {
