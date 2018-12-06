@@ -167,9 +167,9 @@ $(document).ready(function() {
 		$('#profile').css('display', 'none');
 		$('#instName').html('');
 
-		//show Login tab, hide Roster, Attendance, Grades, and Reports tabs
+		//show Login tab, hide Roster, Attendance, Grades, Schedule and Reports tabs
 		$('#loginTab').css('display', 'inline');
-		$('#rosterTab, #attnTab, #gradesTab, #reportsTab').css('display', 'none');
+		$('#rosterTab, #attnTab, #gradesTab, #reportsTab, #scheduleTab').css('display', 'none');
 		$('ul.tabs').tabs('select_tab', 'login');
 	});
 
@@ -237,7 +237,7 @@ function serverLogin(connInfo, email, callback) {
 
 			//hide Login tab, show Roster, Attendance, Grades, and Reports tabs
 			$('#loginTab').css('display', 'none');
-			$('#rosterTab, #attnTab, #gradesTab, #reportsTab, #schedule').css('display', 'inline');
+			$('#rosterTab, #attnTab, #gradesTab, #reportsTab, #scheduleTab').css('display', 'inline');
 			$('ul.tabs').tabs('select_tab', 'attendance');
 
 			//populate instructor name and display profile (including logout menu)
