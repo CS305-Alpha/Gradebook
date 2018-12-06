@@ -111,7 +111,7 @@ $(document).ready(function() {
 			// Need to pre-load calendar, might be a better way to fix this.
 			$('#calendar').fullCalendar({});
 			
-			// Needs better function name 
+			// grab data and populate calendar
 			getSectionIDs(dbInfo, year, season, userrole);
 		}
 		else {
