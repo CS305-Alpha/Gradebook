@@ -639,7 +639,9 @@ app.post('/importSectionRoster', function(request, response) {
                queryText = 'TRUNCATE TABLE RosterStaging;';
                queryParams = [];
 
-               response.status(202).send('Procedure finished');
+               executeQuery(response, config, queryText, queryParams, function(result) {
+                  response.status(202).send('Procedure finished');
+               });
             });
          });
          fstream.pipe(stream);
