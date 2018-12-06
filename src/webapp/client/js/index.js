@@ -589,22 +589,35 @@ function popSecReport(conninfo, year, season, offset, limit, callback) {
 
 // Assuming 'sections' endpoint gives all the sections(title and id) that the user is currently enrolled in
 // for a given year and season
-function getSectionIDs(connInfo, year, seasonorder, coursenumber, userrole) {
-	var urlParams = $.extend({}, connInfo, {
-		year: year, seasonorder: seasonorder,
-		coursenumber: coursenumber, userrole: userrole
-	});
-	$.ajax('sections', {
+function getSectionIDs(connInfo, year, seasonorder, userrole) {
+	var userRole = $('#roleSelect option:selected').val();
+	var urlParams = $.extend({}, connInfo, {userid:userInfo.id, year:year, seasonorder:seasonorder, userRole:userRole});
+
+	//promises would be helpful here to avoid having 7 levels of indentation
+	$.ajax('courses', {
 		dataType: 'json',
 		data: urlParams,
 		success: function(result) {
-			for(var i = 0; i < result.sections.length; i++) {
-				getSectionDates(connInfo, result.sections[i].sectionid, result.sections[i].sectiontitle);
+			result.courses.sort();
+			for (var i = 0; i < result.courses.length; i++) {
+				 var sectionParams = $.extend({}, urlParams, {coursenumber:result.courses[i]});
+				$.ajax('sections', {
+					dataType: 'json',
+					data: sectionParams,
+					success: function(result) {
+						for(var i = 0; i < result.sections.length; i++) {
+							getSectionDates(connInfo, result.sections[i].sectionid, result.sections[i].sectiontitle);
+						}
+					},
+					error: function(result) {
+						showAlert('<p>Error while retrieving sections</p>');
+						console.log(result);
+					}
+				});
 			}
-			
 		},
 		error: function(result) {
-			showAlert('<p>Error while retrieving sections</p>');
+			showAlert('<p>Error while retrieving courses</p>');
 			console.log(result);
 		}
 	});
@@ -613,14 +626,16 @@ function getSectionIDs(connInfo, year, seasonorder, coursenumber, userrole) {
 // Returns list of schedule dates for a given sectionid
 function getSectionDates(connInfo, sectionid, sectiontitle) {
 	var urlParams = $.extend({}, connInfo, {sectionid: sectionid});
-	$.ajax('sectionsschedule', {
+	$.ajax('sectionschedule', {
 		dataType: 'json',
 		data: urlParams,
 		success: function(result) {
 			for(var i = 0; i < result.classDates.length; i++) {
 				var event = {id: i, title: sectiontitle, start: result.classDates[i]};
+				console.log("Event: " + JSON.stringify(event));
 				$('#calendar').fullCalendar('renderEvent', event, true);
 			}
+			var startDate = min()
 		},
 		error: function(result) {
 			showAlert('<p>Error while retrieving class dates</p>');
