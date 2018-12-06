@@ -249,6 +249,7 @@ GRANT EXECUTE ON FUNCTION getTermInstructorCount(termID INT) TO alpha_GB_Webapp,
 CREATE OR REPLACE FUNCTION getTermSectionsReport(termID INT)
 RETURNS TABLE (Course VARCHAR(8),
                SectionNumber VARCHAR(3),
+               Title VARCHAR(100),
                CRN VARCHAR(5),
                Schedule VARCHAR(7),
                Location VARCHAR(25),

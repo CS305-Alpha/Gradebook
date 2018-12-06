@@ -34,7 +34,7 @@ SET LOCAL search_path TO 'alpha', 'pg_temp';
 --attribute matches SESSION_USER. Returns NULL if no such record found.
 CREATE OR REPLACE FUNCTION getMyStudentID() RETURNS INT AS
 $$
-   SELECT id FROM student WHERE schoolissuedid like current_user;
+   SELECT id FROM student WHERE schoolissuedid like SESSION_USER;
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT

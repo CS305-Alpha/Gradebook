@@ -145,11 +145,11 @@ app.get('/login', function(request, response) {
    var queryParams;
    
    if (request.query.userRole == 'instructor') {
-      queryText = "SELECT * FROM getInstructor(getInstructorIDByIssuedID($1));";
+      queryText = "SELECT * FROM getInstructorIDByIssuedID($1), getInstructor(getInstructorIDByIssuedID($1));";
       queryParams = [request.query.user];
    }
    else if (request.query.userRole == 'student') {
-      queryText = "SELECT * FROM getStudentAsStudent();"; //causes a 500 error rather 401 //TODO: need to get info, not just validate
+      queryText = "SELECT * FROM getStudentAsStudent();"; //causes a 500 error rather 401
    }
    else {
       response.status(400).send('400 - Unknown user role');
@@ -166,6 +166,7 @@ app.get('/login', function(request, response) {
       else {
          var jsonReturn = {
             "user": {
+               "id": result.rows[0].getinstructoridbyissuedid,
                "fname": result.rows[0].fname,
                "mname": result.rows[0].mname,
                "lname": result.rows[0].lname,
@@ -195,11 +196,11 @@ app.get('/years', function(request, response) {
 
    //Set the query text
    var queryParams;
-   if(userRole == 'alpha_GB_Instructor') {
+   if(userRole == 'instructor') {
       queryText = 'SELECT Year FROM getInstructorYears($1);';
       queryParams = [userID];
    }
-   else if(userRole == 'alpha_GB_Student') {
+   else if(userRole == 'student') {
       queryText = 'SELECT Year FROM getYearsAsStudent();';
    }
    else {
@@ -231,7 +232,7 @@ app.get('/seasons', function(request, response) {
       passwordText, request.query.host, request.query.port);
 
    //Get the params from the url
-   var userID = request.query.userid;
+   var userID = request.query.userID;
    var userRole = request.query.userRole;
    var year = request.query.year;
    var queryText;
@@ -240,12 +241,13 @@ app.get('/seasons', function(request, response) {
    //Set the query
    var queryParams;
 
-   if(userRole == 'alpha_GB_Instructor') {
+   if(userRole == 'instructor') {
       queryText = 'SELECT SeasonOrder, SeasonName FROM getInstructorSeasons($1, $2);';
       queryParams = [userID, year];
    }
-   else if(userRole == 'alpha_GB_Student') {
-      queryText = 'SELECT SeasonOrder, SeasonName FROM getSeasonsAsStudent();';
+   else if(userRole == 'student') {
+      queryText = 'SELECT SeasonOrder, SeasonName FROM getSeasonsAsStudent($1);';
+      queryParams = [year];
    }
    else {
       queryText = 'SELECT S."Order" AS SeasonOrder, S.Name AS SeasonName FROM' + 
@@ -305,6 +307,7 @@ app.get('/courses', function(request, response) {
       var courses = [];
       for(row in result.rows) {
          courses.push(result.rows[row].course);
+
       }
       var jsonReturn = {
          "courses": courses
@@ -335,7 +338,7 @@ app.get('/sections', function(request, response) {
                    ' Schedule, Location, Instructors FROM' +
                    ' getInstructorSections($1, $2, $3, $4) GIS,' +
                    ' getSection(GIS.sectionID);';
-   var queryParams = [instructorID, year, seasonOrder, courseNumber];
+   var queryParams = [userID, year, seasonOrder, courseNumber];
    }
    else if(userRole == 'student') {
       console.log("Student sections not yet implemented");

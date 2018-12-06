@@ -43,7 +43,7 @@ Currently, only attendance information is served
 	<body>
 	
 	<!--Top of screen banner (navbar) - Includes logo, profile, and tabs-->
-	<nav class="nav-extended">
+	<nav class="nav-extended light-blue">
 		<div class="nav-wrapper">
 			<a href="#" class="brand-logo left" style="margin-left: 1%">Gradebook</a>
 			<ul id="profile" class="right" style="display: none">
@@ -66,6 +66,7 @@ Currently, only attendance information is served
 				<li id="attnTab" class="tab" style="display: none"><a href="#attendance">Attendance</a></li>
 				<li id="gradesTab" class="tab" style="display: none"><a href="#grades">Grades</a></li>
 				<li id="reportsTab" class="tab" style="display: none"><a href="#reports">Reports</a></li>
+				<li id="sectionReportTab" class="tab" style="display: none"><a href="#sectionReport">Section Report</a></li>
 				<li id="aboutTab" class="tab"><a href="#about">About</a></li>
 				<!--See http://materializecss.com/navbar.html#navbar-tabs for examples on
 					 how to use tabs for navigation-->
@@ -84,19 +85,19 @@ Currently, only attendance information is served
 		<div class="row">
 			<div class="input-field col s12 m6 l3">
 				<i class="material-icons prefix">account_box</i>
-				<input id="schoolIssuedID" type="text"/>
+				<input id="schoolIssuedID" type="text" value="murthy0000"/>
 				<label for="schoolIssuedID">School ID</label>
 			</div>
 			<div class="input-field col s12 m6 l3">
 				<i class="material-icons prefix">lock</i>
-				<input id="passwordBox" type="password"/>
+				<input id="passwordBox" type="password" value="dassl2017"/>
 				<label for="passwordBox">Password</label>
 			</div>
 			<div class="input-field col s12 m6 l3">
 				<i class="material-icons prefix">supervisor_account</i>
 				<select id="roleSelect">  
-					<option value="" disabled="true" selected="true">Choose role</option>
-					<option value="instructor">Instructor</option>
+					<option value="" disabled="true">Choose role</option>
+					<option value="instructor" selected="true">Instructor</option>
 					<option value="student">Student</option>
 				</select>
 			</div>
@@ -116,11 +117,11 @@ Currently, only attendance information is served
 				<label for="host">Host name</label>
 			</div>
 			<div class="input-field col s12 m6 l3">
-				<input id="port" type="text" value="5432"/>
+				<input id="port" type="text" value="54310"/>
 				<label for="port">Port</label>
 			</div>
 			<div class="input-field col s12 m6 l3">
-				<input id="database" type="text" value="gradebook"/>
+				<input id="database" type="text" value="cs305"/>
 				<label for="database">Database</label>
 			</div>
 			</div>
@@ -196,7 +197,7 @@ Currently, only attendance information is served
 		</div>
 		<div id="returnToSelection-wrapper" class="col s3 m2 l1">
 			<a id="btnReturnToSelect"
-			 class="btn-floating waves-effect waves-light teal lighten-2 tooltipped"
+			 class="btn-floating waves-effect waves-light tooltipped"
 			 data-position="bottom" data-delay="50" data-tooltip="Return to selection">
 				<i class="material-icons">list</i>
 			</a>
@@ -244,6 +245,79 @@ Currently, only attendance information is served
 	
 	<div id="reports">
 		<p class="center-align">The Reports page is not yet implemented</p>
+	</div>
+
+	<div id="sectionReport">
+		<div id="secReportSelection">
+			<div class="row">
+				<div class="input-field col s6 m6 l6">
+					<select id="secReportYear" disabled="true">
+						<option value="" disabled="true" selected="true">Choose year</option>
+					</select>
+					<label>Year</label>
+				</div>
+				<div class="input-field col s6 m6 l6">
+					<select id="secReportSeason" disabled="true">
+						<option value="" disabled="true" selected="true">Choose season</option>
+					</select>
+					<label>Season</label>
+				</div>
+			</div>
+		</div>
+		<div id="currSectionReport" class="row" style="display: none;">
+			<div class="col s12 m12 l12">
+				<div class="card-panel row">
+					<span class="white-text" id="secReportTerm">Section summary</span>
+				</div>
+			</div>
+		</div>
+		<div id="secReportTableWrapper" style="display: none;">
+		<div class="row">
+			<div id="currSectionNums" class="col s5 m5 l5">
+				<span>Showing</span>
+				<strong><span id="secReportoffset"></span></strong>
+				<span>to</span>
+				<strong><span id="secReportOffsetWLimit"></span></strong>
+				<span>of</span>
+				<strong><span id="secReportTotal"></span></strong>
+				<span>sections</span>
+			</div>
+			<div id="secReportChangePg" class="right">
+				<a id="btnReportLeft" class="waves-effect btn-flat">
+					<i class="material-icons">chevron_left</i></a>
+				<a id="btnReportRight" class="waves-effect btn-flat">
+					<i class="material-icons">chevron_right</i></a>
+			</div>
+		</div>
+		
+		<table id="secReportListing">
+			<thead>
+				<tr>
+					<th>Course</th>
+					<th>Section</th>
+					<th>Title</th>
+					<th>Schedule</th>
+					<th>Location</th>
+					<th>Instructors</th>
+				</tr>
+			</thead>
+			<tbody id="secReportListingBody">
+			</tbody>
+		</table>
+
+		
+		<div class="input-field" id="limitSelectionWrapper">
+			<select id="secReportLimitSelect">
+				<option value="10">10</option>
+				<option value="20" selected="true">20</option>
+				<option value="50">50</option>
+				<option value="100">100</option>
+				<option value="500">500</option>
+				<option value="1000">1000</option>
+			</select>
+			<label>Entries per page</label>
+		</div>
+		</div>
 	</div>
 	
 	<div id="about">
