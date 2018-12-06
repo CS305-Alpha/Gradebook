@@ -259,7 +259,7 @@ RETURNS TABLE (Course VARCHAR(8),
                Instructors VARCHAR
               ) AS
 $$
-   SELECT course, sectionnumber, crn, schedule, location, startdate, enddate,
+   SELECT course, sectionnumber, title, crn, schedule, location, startdate, enddate,
    midtermdate, COALESCE(getInstructorName(instructor1),'') ||
                 COALESCE('; ' || getInstructorName(instructor2),'') ||
                 COALESCE('; ' || getInstructorName(instructor3), '') instructors
