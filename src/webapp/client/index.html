@@ -276,25 +276,19 @@ Currently, only attendance information is served
 	<div id="schedule">
 		<div class="input-field">
 			<i class="material-icons prefix"></i>
-			<select id="calendarSeasonSelect">  
-				<option value="default" disabled="true" selected="true">Choose Season</option>
-				<option value="0">Spring</option>
-				<option value="1">Summer</option>
-				<option value="2">Fall</option>
-				<option value="3">Winter</option>
-			</select>
 
-			
-			<!-- Potentionally populate dynamically based on how many years they've been enrolled? -->
-			<select id="calendarYearSelect">  
-				<option value="default" disabled="true" selected="true">Choose Year</option>
-				<option value="2018">2018</option>
-				<option value="2017">2017</option>
-				<option value="2016">2016</option>
-				<option value="2015">2015</option>
-			</select>
-
-			<a id="btnCalendarSeasonSelect" class="waves-effect waves-light btn">Select</a>
+			<div class="input-field col s6 m6 l6">
+				<select id="calendarSelectYear" disabled="true">
+					<option value="" disabled="true" selected="true">Choose year</option>
+				</select>
+				<label>Year</label>
+			</div>
+			<div class="input-field col s6 m6 l6">
+				<select id="calendarSelectSeason" disabled="true">
+					<option value="" disabled="true" selected="true">Choose season</option>
+				</select>
+				<label>Season</label>
+			</div>
 		</div>
 		<div id='calendar'></div>
   </div>
