@@ -110,8 +110,9 @@ $(document).ready(function() {
 			
 			// Need to pre-load calendar, might be a better way to fix this.
 			$('#calendar').fullCalendar({});
-
-			getStudentCourses(dbInfo, year, season, userrole);
+			
+			// Needs better function name 
+			getSectionIDs(dbInfo, year, season, userrole);
 		}
 		else {
 			showAlert('<h5>Incorrect field</h5><p> Please recheck the selected fields </p>');
@@ -236,7 +237,7 @@ function serverLogin(connInfo, email, callback) {
 
 			//hide Login tab, show Roster, Attendance, Grades, and Reports tabs
 			$('#loginTab').css('display', 'none');
-			$('#rosterTab, #attnTab, #gradesTab, #reportsTab').css('display', 'inline');
+			$('#rosterTab, #attnTab, #gradesTab, #reportsTab, #schedule').css('display', 'inline');
 			$('ul.tabs').tabs('select_tab', 'attendance');
 
 			//populate instructor name and display profile (including logout menu)
