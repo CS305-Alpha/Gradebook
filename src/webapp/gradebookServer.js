@@ -130,6 +130,26 @@ app.get('/js/index.js', function(request, response) {
    response.sendFile('client/js/index.js', {root: __dirname});
 });
 
+app.get('/css/fullcalendar.css', function(request, response) {
+   response.sendFile('client/css/fullcalendar.css', {root: __dirname});
+});
+
+app.get('css/fullcalendar.print.css', function(request, response) {
+   response.sendFile('client/css/fullcalendar.print.css', {root: __dirname});
+});
+
+app.get('js/fullcalendar.js', function(request, response) {
+   response.sendFile('client/js/fullcalendar.js', {root: __dirname});
+});
+
+app.get('js/jquery.min.js', function(request, response) {
+   response.sendFile('client/js/jquery.min.js', {root: __dirname});
+});
+
+app.get('js/moment.min.js', function(request, response) {
+   response.sendFile('client/js/moment.min.js', {root: __dirname});
+});
+
 //Returns instructor id and name from a provided email.
 app.get('/login', function(request, response) {
     //Decrypt the password recieved from the client.  This is a temporary development
