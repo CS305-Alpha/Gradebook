@@ -94,7 +94,11 @@ $(document).ready(function() {
 				$('#dbInfoBox').collapsible('close', 0);
 				$('#dbInfoArrow').html('keyboard_arrow_down');
 
+				$('#calendar').fullCalendar({});
+				$("#calendar").css({"visibility": "hidden"});
+
 				popYears(dbInfo, '#yearSelect');
+				popYears(dbInfo, '#calendarSelectYear');
 				popYears(dbInfo, '#secReportYear'); //currently only populates user years, should populate institution years
 				setSeasons(null, '#yearSelect');
 			});
@@ -105,23 +109,23 @@ $(document).ready(function() {
 				'DB Info.</p>');
 		}
 	});
-	
-	$('#btnCalendarSeasonSelect').click(function() {
-		if($('#calendarSeasonSelect option:selected').val() != 'default' && $('#calendarYearSelect option:selected').val() != 'default' ) {
-			var season = $('#calendarSeasonSelect option:selected').val();
-			var year = $('#calendarYearSelect option:selected').val();
-			var userrole = $('#roleSelect option:selected').val();
-			
-			// Need to pre-load calendar, might be a better way to fix this.
-			$('#calendar').fullCalendar({});
-			
-			// grab data and populate calendar
-			getSectionIDs(dbInfo, year, season, userrole);
-		}
-		else {
-			showAlert('<h5>Incorrect field</h5><p> Please recheck the selected fields </p>');
-		}
+
+	$('#calendarSelectYear').change(function() {
+		var year = $('#calendarSelectYear').val();
+		popSeasons(dbInfo, year, '#calendarSelectSeason');
 	});
+
+	$('#calendarSelectSeason').change(function() {
+		var season = $('#calendarSelectSeason option:selected').val();
+		var year = $('#calendarSelectYear option:selected').val();
+		var userrole = $('#roleSelect option:selected').val();
+
+		$("#calendar").css({"visibility": "visible"});
+		$('#calendar').fullCalendar( 'render' );
+
+		// grab data and populate calendar
+		getSectionIDs(dbInfo, year, season, userrole);
+	})
 
 	$('#yearSelect').change(function() {
 		var year = $('#yearSelect').val();
