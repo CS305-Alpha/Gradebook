@@ -51,10 +51,13 @@ const monthNames = [
 var pg = require('pg'); //Postgres client module               | https://github.com/brianc/node-postgres
 var sjcl = require('sjcl'); //Encryption module                | https://github.com/bitwiseshiftleft/sjcl
 var express = require('express'); //Express module             | https://github.com/expressjs/express
+
 var fs = require('fs'); //File System module                   | https://nodejs.org/api/fs.html
 var copyFrom = require('pg-copy-streams').from; //Copy Module  | https://github.com/brianc/node-pg-copy-streams
+var Readable = require('stream').Readable //for converting strings to streams
 
 var app = express();
+app.use(express.urlencoded({extended: false}));
 
 /*
 This function creates and returns a config object for the pg module based on some
@@ -142,11 +145,11 @@ app.get('/login', function(request, response) {
    var queryParams;
    
    if (request.query.userRole == 'instructor') {
-      queryText = "SELECT getInstructorIDByIssuedID($1)";
+      queryText = "SELECT * FROM getInstructorIDByIssuedID($1), getInstructor(getInstructorIDByIssuedID($1));";
       queryParams = [request.query.user];
    }
    else if (request.query.userRole == 'student') {
-      queryText = "SELECT getMyStudentID();"; //causes a 500 error rather 401
+      queryText = "SELECT * FROM getStudentAsStudent();"; //causes a 500 error rather 401
    }
    else {
       response.status(400).send('400 - Unknown user role');
@@ -161,9 +164,30 @@ app.get('/login', function(request, response) {
          response.status(401).send('401 - Login failed');
       }
       else {
-         var jsonReturn = {
-            "user": result.rows[0] //getInstructors should return at most one row
-         };
+         if (request.query.userRole == 'instructor') {
+            var jsonReturn = {
+               "user": {
+                  "id": result.rows[0].getinstructoridbyissuedid,
+                  "fname": result.rows[0].fname,
+                  "mname": result.rows[0].mname,
+                  "lname": result.rows[0].lname,
+                  "dept": result.rows[0].department,
+                  "email": result.rows[0].email
+               } 
+            };
+         }
+         else if (request.query.userRole == 'student') {
+            var jsonReturn = {
+               "user": {
+                  "id": result.rows[0].id,
+                  "fname": result.rows[0].fname,
+                  "mname": result.rows[0].mname,
+                  "lname": result.rows[0].lname,
+                  "dept": result.rows[0].department,
+                  "email": result.rows[0].email
+               } 
+            };
+         }
          response.send(JSON.stringify(jsonReturn));
       }
    });
@@ -186,11 +210,11 @@ app.get('/years', function(request, response) {
 
    //Set the query text
    var queryParams;
-   if(userRole == 'alpha_GB_Instructor') {
+   if(userRole == 'instructor') {
       queryText = 'SELECT Year FROM getInstructorYears($1);';
       queryParams = [userID];
    }
-   else if(userRole == 'alpha_GB_Student') {
+   else if(userRole == 'student') {
       queryText = 'SELECT Year FROM getYearsAsStudent();';
    }
    else {
@@ -222,7 +246,7 @@ app.get('/seasons', function(request, response) {
       passwordText, request.query.host, request.query.port);
 
    //Get the params from the url
-   var userID = request.query.userid;
+   var userID = request.query.userID;
    var userRole = request.query.userRole;
    var year = request.query.year;
    var queryText;
@@ -231,12 +255,13 @@ app.get('/seasons', function(request, response) {
    //Set the query
    var queryParams;
 
-   if(userRole == 'alpha_GB_Instructor') {
+   if(userRole == 'instructor') {
       queryText = 'SELECT SeasonOrder, SeasonName FROM getInstructorSeasons($1, $2);';
       queryParams = [userID, year];
    }
-   else if(userRole == 'alpha_GB_Student') {
-      queryText = 'SELECT SeasonOrder, SeasonName FROM getSeasonsAsStudent();';
+   else if(userRole == 'student') {
+      queryText = 'SELECT SeasonOrder, SeasonName FROM getSeasonsAsStudent($1);';
+      queryParams = [year];
    }
    else {
       queryText = 'SELECT S."Order" AS SeasonOrder, S.Name AS SeasonName FROM' + 
@@ -284,8 +309,8 @@ app.get('/courses', function(request, response) {
 
    }
    else if(userRole == 'student') {
-      var queryText = 'SELECT SectionID, SectionNumber FROM getStudentCourses($1, $2, $3, $4);';
-      var queryParams = [userID, year, seasonOrder, courseNumber];
+      var queryText = 'SELECT DISTINCT Course FROM getStudentSections($1, $2, $3);';
+      var queryParams = [userID, year, seasonOrder];
    }
    else {
       response.status(400).send('400 - Unknown user role');
@@ -296,6 +321,7 @@ app.get('/courses', function(request, response) {
       var courses = [];
       for(row in result.rows) {
          courses.push(result.rows[row].course);
+
       }
       var jsonReturn = {
          "courses": courses
@@ -322,14 +348,18 @@ app.get('/sections', function(request, response) {
    var userRole = request.query.userRole;
 
    if(userRole == 'instructor') {
-   var queryText = 'SELECT SectionID, Course, GIS.SectionNumber, Title,' +
+      var queryText = 'SELECT SectionID, Course, GIS.SectionNumber, Title,' +
                    ' Schedule, Location, Instructors FROM' +
                    ' getInstructorSections($1, $2, $3, $4) GIS,' +
                    ' getSection(GIS.sectionID);';
-   var queryParams = [instructorID, year, seasonOrder, courseNumber];
+      var queryParams = [userID, year, seasonOrder, courseNumber];
    }
    else if(userRole == 'student') {
-      console.log("Student sections not yet implemented");
+      var queryText = 'SELECT SectionID, Course, GSS.SectionNumber, Title,' +
+                      ' Schedule, Location, Instructors FROM' +
+                      ' getStudentSections($1, $2, $3, $4) GSS,' +
+                      ' getSection(GSS.sectionID);';
+      var queryParams = [userID, year, seasonOrder, courseNumber];
    }
    else {
       response.status(400).send('400 - Unknown user role');
@@ -581,42 +611,59 @@ app.get('/attendance', function(request, response) {
 app.post('/importSectionRoster', function(request, response) {
    //Decrypt the password recieved from the client.  This is a temporary development
    //feature, since we don't have ssl set up yet
-   var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.query.password));
+   var passwordText = sjcl.decrypt(superSecret, JSON.parse(request.body.password));
 
    //Connnection parameters for the Postgres client recieved in the request
-   var config = createConnectionParams(request.query.user, request.query.database,
-      passwordText, request.query.host, request.query.port);
+   var config = createConnectionParams(request.body.user, request.body.database,
+      passwordText, request.body.host, request.body.port);
+
+   var client = new pg.Client(config); //Connect to pg instance
 
    //Get file from client
-   var file = request.query.file;
+   var file = request.body.data;
+
+   //get params from client
+   var year = request.body.year;
+   var season = request.body.season;
+   var course = request.body.course;
+   var section = request.body.sectionNumber;
+   
+   //Convert file to stream
+   var fstream = new Readable;
+   fstream.push(file);
+   fstream.push(null); //terminate stream
 
    //Pipe from file into staging table
-   pg.connect(function(err, client, done) {
+   client.connect(function(err, client, done) {
       if(err) {
          console.log(err);
       } else {
-         var stream = client.query(copyFrom('Copy RosterStaging FROM STDIN'));
-         var fileStream = fs.createReadStream(file);
-         fileStream.on('error', done);
-         stream.on('error', done);
-         stream.on('end', done);
-         fileStream.pipe(stream);
+         var stream = client.query(copyFrom('COPY RosterStaging FROM STDIN WITH CSV HEADER'));
+         fstream.on('error', function(error) {
+            console.log("Error interpreting/reading roster data: " + JSON.stringify(error));
+            response.status(500).send('500 - Error receiving data');
+         });
+         stream.on('error', function(error) {
+            console.log("Error COPYing data to Postgres: " + JSON.stringify(error));
+            response.status(500).send('500 - Error importing data');
+         });
+         stream.on('end', function() {
+            //Setup for function importRoster
+            var queryText = 'SELECT * FROM importRoster($1, $2, $3, $4);';
+            var queryParams = [year, season, course, section];
+
+            executeQuery(response, config, queryText, queryParams, function(result) {
+               //Set queryText to Truncate the RosterStaging table
+               queryText = 'TRUNCATE TABLE RosterStaging;';
+               queryParams = [];
+
+               executeQuery(response, config, queryText, queryParams, function(result) {
+                  response.status(202).send('Procedure finished');
+               });
+            });
+         });
+         fstream.pipe(stream);
       }
-   });
-
-   //Setup for function importRoster
-   var queryText = 'SELECT * FROM importRoster();';
-   var queryParams = [];
-
-   executeQuery(response, config, queryText, queryParams, function(result) {
-   });
-
-   //Set queryText to Truncate the RosterStaging table
-   queryText = 'TRUNCATE TABLE RosterStaging;';
-   queryParams = [];
-
-   executeQuery(response, config, queryText, queryParams, function(result) {
-      response.send(result);
    });
 });
 

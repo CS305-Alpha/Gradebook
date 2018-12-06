@@ -34,7 +34,7 @@ SET LOCAL search_path TO 'alpha', 'pg_temp';
 --attribute matches SESSION_USER. Returns NULL if no such record found.
 CREATE OR REPLACE FUNCTION getMyStudentID() RETURNS INT AS
 $$
-   SELECT id FROM student WHERE schoolissuedid like current_user;
+   SELECT id FROM student WHERE schoolissuedid like SESSION_USER;
 $$ LANGUAGE sql
    SECURITY DEFINER
    SET search_path FROM CURRENT
@@ -371,6 +371,33 @@ GRANT EXECUTE ON FUNCTION getStudentIDbyEmail(email VARCHAR(319))
    alpha_GB_RegistrarAdmin, alpha_GB_Admissions, alpha_GB_DBAdmin;
 
 
+--Returns a table containing information about the student that has a
+-- SchoolIssuedID matching SESSION_USER
+CREATE OR REPLACE FUNCTION getStudentAsStudent()
+RETURNS TABLE
+(
+   ID INTEGER,
+   FName VARCHAR(50),
+   MName VARCHAR(50),
+   LName VARCHAR(50),
+   Email VARCHAR(319)
+) AS
+$$
+   SELECT S.ID, S.FName, S.MName, S.LName, S.Email
+   FROM Student S
+   WHERE S.SchoolIssuedID = SESSION_USER;
+$$ LANGUAGE sql
+   SECURITY DEFINER
+   SET search_path FROM CURRENT
+   STABLE
+   ROWS 1;
+
+ALTER FUNCTION getStudentAsStudent() OWNER TO CURRENT_USER;
+
+REVOKE ALL ON FUNCTION getStudentAsStudent() FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION getStudentAsStudent() TO alpha_GB_Student;
+
 
 --Changes midtermGradeAwarded in a row of the Enrollee table where the row's
 --student attribute matches the argument student, and where the student is in
@@ -468,11 +495,12 @@ $$
           N.Course || '-' || N.SectionNumber AS CourseSection
    FROM Enrollee E JOIN Section N ON E.section = N.id 
       JOIN Term T ON N.Term  = T.ID 
-   WHERE 1 = E.Student
-         AND T.Year = 2
-         AND T.Season = 3
+   WHERE $1 = E.Student
+         AND T.Year = $2
+         AND T.Season = $3
    ORDER BY CourseSection;
 $$ LANGUAGE sql
+   SECURITY DEFINER
    STABLE
    RETURNS NULL ON NULL INPUT;
 
@@ -504,6 +532,7 @@ $$
    ORDER BY SectionNumber;
 
 $$ LANGUAGE sql
+   SECURITY DEFINER
    STABLE
    RETURNS NULL ON NULL INPUT;
 

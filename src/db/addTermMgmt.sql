@@ -249,6 +249,7 @@ GRANT EXECUTE ON FUNCTION getTermInstructorCount(termID INT) TO alpha_GB_Webapp,
 CREATE OR REPLACE FUNCTION getTermSectionsReport(termID INT)
 RETURNS TABLE (Course VARCHAR(8),
                SectionNumber VARCHAR(3),
+               Title VARCHAR(100),
                CRN VARCHAR(5),
                Schedule VARCHAR(7),
                Location VARCHAR(25),
@@ -259,9 +260,9 @@ RETURNS TABLE (Course VARCHAR(8),
               ) AS
 $$
    SELECT course, sectionnumber, crn, schedule, location, startdate, enddate,
-   midtermdate, COALESCE(getInstructorName(instructor1),' ') ||
-                COALESCE(', ' || getInstructorName(instructor2),' ') ||
-                COALESCE(', ' || getInstructorName(instructor3)) instructors
+   midtermdate, COALESCE(getInstructorName(instructor1),'') ||
+                COALESCE('; ' || getInstructorName(instructor2),'') ||
+                COALESCE('; ' || getInstructorName(instructor3), '') instructors
    FROM section WHERE term = $1;
 $$ LANGUAGE sql
    SECURITY DEFINER
@@ -352,9 +353,9 @@ RETURNS TABLE(Number VARCHAR(8),
               EndDate DATE
              ) AS
 $$
-   SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
-                         COALESCE(', ' || getInstructorName(instructor2),' ') ||
-                         COALESCE(', ' || getInstructorName(instructor3)),
+   SELECT number, title, COALESCE(getInstructorName(instructor1),'') ||
+                         COALESCE('; ' || getInstructorName(instructor2),'') ||
+                         COALESCE('; ' || getInstructorName(instructor3),''),
                          s.startdate, s.endDate
    FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
    ORDER BY t.year;
@@ -384,9 +385,9 @@ RETURNS TABLE(Number VARCHAR(8),
               EndDate DATE
              ) AS
 $$
-   SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
-                         COALESCE(', ' || getInstructorName(instructor2),' ') ||
-                         COALESCE(', ' || getInstructorName(instructor3)),
+   SELECT number, title, COALESCE(getInstructorName(instructor1),'') ||
+                         COALESCE('; ' || getInstructorName(instructor2),'') ||
+                         COALESCE('; ' || getInstructorName(instructor3),''),
                          s.startdate, s.endDate
    FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
    WHERE t.year = $1;
@@ -416,9 +417,9 @@ RETURNS TABLE(Number VARCHAR(8),
               EndDate DATE
              ) AS
 $$
-   SELECT number, title, COALESCE(getInstructorName(instructor1),' ') ||
-                         COALESCE(', ' || getInstructorName(instructor2),' ') ||
-                         COALESCE(', ' || getInstructorName(instructor3)),
+   SELECT number, title, COALESCE(getInstructorName(instructor1),'') ||
+                         COALESCE('; ' || getInstructorName(instructor2),'') ||
+                         COALESCE('; ' || getInstructorName(instructor3),''),
                          s.startdate, s.endDate
    FROM term t JOIN section s ON t.id = s.id JOIN course c ON s.course LIKE c.number
    WHERE t.id = $1;
