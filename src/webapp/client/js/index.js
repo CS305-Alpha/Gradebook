@@ -120,9 +120,8 @@ $(document).ready(function() {
 		var year = $('#calendarSelectYear option:selected').val();
 		var userrole = $('#roleSelect option:selected').val();
 
-		var date = year + '01-01';	
 		$("#calendar").css({"visibility": "visible"});
-		$('#calendar').fullCalendar( 'gotoDate', date );
+		$('#calendar').fullCalendar( 'render' );
 
 		// grab data and populate calendar
 		getSectionIDs(dbInfo, year, season, userrole);
