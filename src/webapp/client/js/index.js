@@ -216,7 +216,7 @@ $(document).ready(function() {
 				summary += "<li><strong>Student count: </strong>" + termSummary.StudentCount + "</li>";
 				summary += "</ul>";
 				$('#secReportTerm').html(summary);
-				
+
 				$('#secReportTableWrapper, #currSectionReport').fadeIn(500);
 			});
 		});
@@ -258,9 +258,14 @@ $(document).ready(function() {
 function uploadRoster(event){
 	var result = event.target.result;
 	var fileName = document.getElementById('rosterImport').files[0].name;
-	var data = $.extend({}, dbInfo, {data: result}, {name: fileName});
-	$.post('/importSectionRoster', data, showAlert("<p>Upload Successful.</p>"));
+	var data = $.extend({}, dbInfo, {data: result, name: fileName,
+		"year": $('#rosterYear').val(),
+		"season": $('#rosterSeason').val(),
+		"course": $('#rosterCourse').val(),
+		"sectionNumber": $('#rosterSection').val()
+	});
 	
+	$.post('/importSectionRoster', data, showAlert("<p>Upload Successful.</p>"));
 };
 
 function showAlert(htmlContent) {
