@@ -495,11 +495,12 @@ $$
           N.Course || '-' || N.SectionNumber AS CourseSection
    FROM Enrollee E JOIN Section N ON E.section = N.id 
       JOIN Term T ON N.Term  = T.ID 
-   WHERE 1 = E.Student
-         AND T.Year = 2
-         AND T.Season = 3
+   WHERE $1 = E.Student
+         AND T.Year = $2
+         AND T.Season = $3
    ORDER BY CourseSection;
 $$ LANGUAGE sql
+   SECURITY DEFINER
    STABLE
    RETURNS NULL ON NULL INPUT;
 
@@ -531,6 +532,7 @@ $$
    ORDER BY SectionNumber;
 
 $$ LANGUAGE sql
+   SECURITY DEFINER
    STABLE
    RETURNS NULL ON NULL INPUT;
 
