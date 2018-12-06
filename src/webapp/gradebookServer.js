@@ -134,19 +134,19 @@ app.get('/css/fullcalendar.css', function(request, response) {
    response.sendFile('client/css/fullcalendar.css', {root: __dirname});
 });
 
-app.get('css/fullcalendar.print.css', function(request, response) {
+app.get('/css/fullcalendar.print.css', function(request, response) {
    response.sendFile('client/css/fullcalendar.print.css', {root: __dirname});
 });
 
-app.get('js/fullcalendar.js', function(request, response) {
+app.get('/js/fullcalendar.js', function(request, response) {
    response.sendFile('client/js/fullcalendar.js', {root: __dirname});
 });
 
-app.get('js/jquery.min.js', function(request, response) {
+app.get('/js/jquery.min.js', function(request, response) {
    response.sendFile('client/js/jquery.min.js', {root: __dirname});
 });
 
-app.get('js/moment.min.js', function(request, response) {
+app.get('/js/moment.min.js', function(request, response) {
    response.sendFile('client/js/moment.min.js', {root: __dirname});
 });
 
@@ -419,7 +419,7 @@ app.get('/sectionschedule', function(request, response) {
    var config = createConnectionParams(request.query.user, request.query.database,
       passwordText, request.query.host, request.query.port);
 
-   var sectionID = request.query.sectionID;
+   var sectionID = request.query.sectionid;
 
    var queryText = 'SELECT date::VARCHAR FROM significantDate WHERE NOT classesheld;';
    var queryParams = [];
@@ -429,22 +429,22 @@ app.get('/sectionschedule', function(request, response) {
       for(row in result.rows) {
          closedDates.push(result.rows[row].date);
       }
-   });
 
-   queryText = 'SELECT scheduledate::VARCHAR AS date FROM getScheduleDates($1);';
-   queryParams = [sectionID];
-
-   executeQuery(response, config, queryText, queryParams, function(result) {
-      var classDates = [];
-      for(row in result.rows) {
-         if(!closedDates.includes(result.rows[row].date)) {
-            classDates.push(result.rows[row].date);
+      queryText = 'SELECT scheduledate::VARCHAR AS date FROM getScheduleDates($1);';
+      queryParams = [sectionID];
+   
+      executeQuery(response, config, queryText, queryParams, function(result) {
+         var classDates = [];
+         for(row in result.rows) {
+            if(!closedDates.includes(result.rows[row].date)) {
+               classDates.push(result.rows[row].date);
+            }
          }
-      }
-      var jsonReturn = {
-         "classDates": classDates
-      };
-      response.send(JSON.stringify(jsonReturn));
+         var jsonReturn = {
+            "classDates": classDates
+         };
+         response.send(JSON.stringify(jsonReturn));
+      });
    });
 });
 
