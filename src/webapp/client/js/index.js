@@ -632,7 +632,6 @@ function getSectionDates(connInfo, sectionid, sectiontitle) {
 		success: function(result) {
 			for(var i = 0; i < result.classDates.length; i++) {
 				var event = {id: i, title: sectiontitle, start: result.classDates[i]};
-				console.log("Event: " + JSON.stringify(event));
 				$('#calendar').fullCalendar('renderEvent', event, true);
 			}
 		},
