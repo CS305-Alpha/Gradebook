@@ -23,6 +23,9 @@ Currently, only attendance information is served
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<!--Import Materialize framework - Learn more: http://materializecss.com/-->
 	<link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
+	<!--Import Fullcalendar-->
+	<link rel="stylesheet" href="css/fullcalendar.css" />
+	
 	<style>
 		/* Materialize attempts to use the Roboto font family by default */
 		html {
@@ -72,6 +75,7 @@ Currently, only attendance information is served
 				<li id="attnTab" class="tab" style="display: none"><a href="#attendance">Attendance</a></li>
 				<li id="gradesTab" class="tab" style="display: none"><a href="#grades">Grades</a></li>
 				<li id="reportsTab" class="tab" style="display: none"><a href="#reports">Reports</a></li>
+				<li id="scheduleTab" class="tab" style="display: none"><a href="#schedule">Schedule</a></li>
 				<li id="sectionReportTab" class="tab" style="display: none"><a href="#sectionReport">Section Report</a></li>
 				<li id="aboutTab" class="tab"><a href="#about">About</a></li>
 				<!--See http://materializecss.com/navbar.html#navbar-tabs for examples on
@@ -269,6 +273,32 @@ Currently, only attendance information is served
 		<p class="center-align">The Reports page is not yet implemented</p>
 	</div>
 
+	<div id="schedule">
+		<div class="input-field">
+			<i class="material-icons prefix"></i>
+			<select id="calendarSeasonSelect">  
+				<option value="default" disabled="true" selected="true">Choose Season</option>
+				<option value="fall">Fall</option>
+				<option value="winter">Winter</option>
+				<option value="spring">Spring</option>
+				<option value="summer">Summer</option>
+			</select>
+
+			
+			<!-- Potentionally populate dynamically based on how many years they've been enrolled? -->
+			<select id="calendarYearSelect">  
+				<option value="default" disabled="true" selected="true">Choose Year</option>
+				<option value="2018">2018</option>
+				<option value="2017">2017</option>
+				<option value="2016">2016</option>
+				<option value="2015">2015</option>
+			</select>
+
+			<a id="btnCalendarSeasonSelect" class="waves-effect waves-light btn">Select</a>
+		</div>
+		<div id='calendar'></div>
+  </div>
+  
 	<div id="sectionReport">
 		<div id="secReportSelection">
 			<div class="row">
@@ -416,6 +446,9 @@ Currently, only attendance information is served
 	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
 	<script type="text/javascript" src="js/materialize.min.js"></script>
 	<script type="text/javascript" src="js/index.js"></script>
+	<script src='lib/jquery.min.js'></script>
+	<script src="js/moment.min.js"></script>
+	<script src="js/fullcalendar.js"></script>
 	<script src="https://bitwiseshiftleft.github.io/sjcl/sjcl.js"></script>
 
 </html>

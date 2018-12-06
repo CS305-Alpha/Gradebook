@@ -105,6 +105,23 @@ $(document).ready(function() {
 				'DB Info.</p>');
 		}
 	});
+	
+	$('#btnCalendarSeasonSelect').click(function() {
+		if($('#calendarSeasonSelect option:selected').val() != 'default' && $('#calendarYearSelect option:selected').val() != 'default' ) {
+			var season = $('#calendarSeasonSelect option:selected').val();
+			var year = $('#calendarYearSelect option:selected').val();
+			var userrole = $('#roleSelect option:selected').val();
+			
+			// Need to pre-load calendar, might be a better way to fix this.
+			$('#calendar').fullCalendar({});
+			
+			// grab data and populate calendar
+			getSectionIDs(dbInfo, year, season, userrole);
+		}
+		else {
+			showAlert('<h5>Incorrect field</h5><p> Please recheck the selected fields </p>');
+		}
+	});
 
 	$('#yearSelect').change(function() {
 		var year = $('#yearSelect').val();
@@ -237,7 +254,7 @@ $(document).ready(function() {
 		
 		//show Login tab, hide Roster, Attendance, Grades, and Reports tabs
 		$('#loginTab').css('display', 'inline');
-		$('#rosterTab, #attnTab, #gradesTab, #reportsTab, #sectionReportTab').css('display', 'none');
+		$('#rosterTab, #attnTab, #gradesTab, #reportsTab, #sectionReportTab, #scheduleTab').css('display', 'none');
 		$('ul.tabs').tabs('select_tab', 'login');
 	});
 
@@ -307,7 +324,7 @@ function serverLogin(connInfo, email, callback) {
 
 			//hide Login tab, show Roster, Attendance, Grades, and Reports tabs
 			$('#loginTab').css('display', 'none');
-			$('#rosterTab, #attnTab, #gradesTab, #reportsTab, #sectionReportTab').css('display', 'inline');
+			$('#rosterTab, #attnTab, #gradesTab, #reportsTab, #sectionReportTab, #scheduleTab').css('display', 'inline');
 			$('ul.tabs').tabs('select_tab', 'attendance');
 			
 			//populate user given name and display profile (including logout menu)
@@ -523,7 +540,6 @@ function setAttendance(htmlText) {
 		$('#attendanceData').fadeIn();
 	}
 };
-
 function popSecReport(conninfo, year, season, offset, limit, callback) {
 	var secReportParams = $.extend({}, conninfo, {year:year, season:season, offset:offset, limit:limit});
 	
@@ -571,25 +587,9 @@ function popSecReport(conninfo, year, season, offset, limit, callback) {
 	});
 };
 
-// Returns list of courses for a given user id
-/*
-function getStudentCourses(connInfo, year, seasonorder, userrole) {
-	var urlParams = $.extend({}, connInfo, {year: year, seasonorder: seasonorder, userrole: userrole});
-	$.ajax('courses', {
-		dataType: 'json',
-		data: urlParams,
-		success: function(result) {
-			//TODO: Implement population of calendar
-		},
-		error: function(result) {
-			showAlert('<p>Error while retrieving courses</p>');
-			console.log(result);
-		}
-	});
-};
-
-// Returns sectionid and sectiontitle for a given course
-function getStudentCourses(connInfo, year, seasonorder, coursenumber, userrole) {
+// Assuming 'sections' endpoint gives all the sections(title and id) that the user is currently enrolled in
+// for a given year and season
+function getSectionIDs(connInfo, year, seasonorder, coursenumber, userrole) {
 	var urlParams = $.extend({}, connInfo, {
 		year: year, seasonorder: seasonorder,
 		coursenumber: coursenumber, userrole: userrole
@@ -598,14 +598,10 @@ function getStudentCourses(connInfo, year, seasonorder, coursenumber, userrole) 
 		dataType: 'json',
 		data: urlParams,
 		success: function(result) {
-			var sections = [];
 			for(var i = 0; i < result.sections.length; i++) {
-				sections.push({
-					"sectionid": result.sections[i].sectiondid,
-					"sectiontitle": result.sections[i].sectiontitle
-				})
+				getSectionDates(connInfo, result.sections[i].sectionid, result.sections[i].sectiontitle);
 			}
-			//TODO: Implement population of calendar
+			
 		},
 		error: function(result) {
 			showAlert('<p>Error while retrieving sections</p>');
@@ -614,18 +610,17 @@ function getStudentCourses(connInfo, year, seasonorder, coursenumber, userrole) 
 	});
 };
 
-// Returns lit of schedule dates for a given sectionid
-function getStudentCourses(connInfo, sectionid) {
+// Returns list of schedule dates for a given sectionid
+function getSectionDates(connInfo, sectionid, sectiontitle) {
 	var urlParams = $.extend({}, connInfo, {sectionid: sectionid});
 	$.ajax('sectionsschedule', {
 		dataType: 'json',
 		data: urlParams,
 		success: function(result) {
-			var dates = [];
 			for(var i = 0; i < result.classDates.length; i++) {
-				sections.push(result.classDates[i]);
+				var event = {id: i, title: sectiontitle, start: result.classDates[i]};
+				$('#calendar').fullCalendar('renderEvent', event, true);
 			}
-			//TODO: Implement population of calendar
 		},
 		error: function(result) {
 			showAlert('<p>Error while retrieving class dates</p>');
@@ -633,4 +628,3 @@ function getStudentCourses(connInfo, sectionid) {
 		}
 	});
 };
-*/
