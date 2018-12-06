@@ -635,7 +635,6 @@ function getSectionDates(connInfo, sectionid, sectiontitle) {
 				console.log("Event: " + JSON.stringify(event));
 				$('#calendar').fullCalendar('renderEvent', event, true);
 			}
-			var startDate = min()
 		},
 		error: function(result) {
 			showAlert('<p>Error while retrieving class dates</p>');
