@@ -603,6 +603,12 @@ app.post('/importSectionRoster', function(request, response) {
 
    //Get file from client
    var file = request.body.data;
+
+   //get params from client
+   var year = request.body.year;
+   var season = request.body.season;
+   var course = request.body.course;
+   var section = request.body.sectionNumber;
    
    //Convert file to stream
    var fstream = new Readable;
@@ -617,23 +623,23 @@ app.post('/importSectionRoster', function(request, response) {
          var stream = client.query(copyFrom('COPY RosterStaging FROM STDIN WITH CSV HEADER'));
          fstream.on('error', function(error) {
             console.log("Error interpreting/reading roster data: " + JSON.stringify(error));
+            response.status(500).send('500 - Error receiving data');
          });
          stream.on('error', function(error) {
             console.log("Error COPYing data to Postgres: " + JSON.stringify(error));
+            response.status(500).send('500 - Error importing data');
          });
          stream.on('end', function() {
             //Setup for function importRoster
-            var queryText = 'SELECT * FROM importRoster();';
-            var queryParams = [];
+            var queryText = 'SELECT * FROM importRoster($1, $2, $3, $4);';
+            var queryParams = [year, season, course, section];
 
             executeQuery(response, config, queryText, queryParams, function(result) {
                //Set queryText to Truncate the RosterStaging table
                queryText = 'TRUNCATE TABLE RosterStaging;';
                queryParams = [];
 
-               executeQuery(response, config, queryText, queryParams, function(result) {
-                  response.send(result);
-               });
+               response.status(202).send('Procedure finished');
             });
          });
          fstream.pipe(stream);
