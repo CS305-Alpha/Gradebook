@@ -36,9 +36,11 @@ var secReportLimit = 20;
 var secReportCount = 0;
 
 $(document).ready(function() {
-	$('.btn').addClass('red');
-	$('.btn-floating').addClass('red');
-	$('.card-panel').addClass('red');
+	var secondaryColor = "secondary-color";
+
+	$('.btn').addClass(secondaryColor);
+	$('.btn-floating').addClass(secondaryColor);
+	$('.card-panel').addClass(secondaryColor);
 
 	$('select').material_select(); //load dropdown boxes
 
@@ -264,7 +266,7 @@ function uploadRoster(event){
 		"course": $('#rosterCourse').val(),
 		"sectionNumber": $('#rosterSection').val()
 	});
-	
+
 	$.post('/importSectionRoster', data, showAlert("<p>Upload Successful.</p>"));
 };
 
