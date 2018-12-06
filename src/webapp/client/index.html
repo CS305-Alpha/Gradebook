@@ -43,7 +43,7 @@ Currently, only attendance information is served
 	<body>
 	
 	<!--Top of screen banner (navbar) - Includes logo, profile, and tabs-->
-	<nav class="nav-extended">
+	<nav class="nav-extended light-blue">
 		<div class="nav-wrapper">
 			<a href="#" class="brand-logo left" style="margin-left: 1%">Gradebook</a>
 			<ul id="profile" class="right" style="display: none">
@@ -197,7 +197,7 @@ Currently, only attendance information is served
 		</div>
 		<div id="returnToSelection-wrapper" class="col s3 m2 l1">
 			<a id="btnReturnToSelect"
-			 class="btn-floating waves-effect waves-light teal lighten-2 tooltipped"
+			 class="btn-floating waves-effect waves-light tooltipped"
 			 data-position="bottom" data-delay="50" data-tooltip="Return to selection">
 				<i class="material-icons">list</i>
 			</a>
@@ -250,13 +250,13 @@ Currently, only attendance information is served
 	<div id="sectionReport">
 		<div id="secReportSelection">
 			<div class="row">
-				<div class="input-field col s6 m3 l3">
+				<div class="input-field col s6 m6 l6">
 					<select id="secReportYear" disabled="true">
 						<option value="" disabled="true" selected="true">Choose year</option>
 					</select>
 					<label>Year</label>
 				</div>
-				<div class="input-field col s6 m3 l3">
+				<div class="input-field col s6 m6 l6">
 					<select id="secReportSeason" disabled="true">
 						<option value="" disabled="true" selected="true">Choose season</option>
 					</select>
@@ -264,16 +264,16 @@ Currently, only attendance information is served
 				</div>
 			</div>
 		</div>
-		<div id="currSessionReport" class="row" style=>
+		<div id="currSectionReport" class="row" style="display: none;">
 			<div class="col s12 m12 l12">
-				<div class="card-panel teal">
-					<span class="white-text" id="secReportTerm">SEASON YEAR</span>
-					<i class="small material-icons right">info_outline</i>
+				<div class="card-panel row">
+					<span class="white-text" id="secReportTerm">Section summary</span>
 				</div>
 			</div>
 		</div>
+		<div id="secReportTableWrapper" style="display: none;">
 		<div class="row">
-			<div id="currSectionNums" class="left">
+			<div id="currSectionNums" class="col s5 m5 l5">
 				<span>Showing</span>
 				<strong><span id="secReportoffset"></span></strong>
 				<span>to</span>
@@ -283,12 +283,13 @@ Currently, only attendance information is served
 				<span>sections</span>
 			</div>
 			<div id="secReportChangePg" class="right">
-				<a id="btnReportLeft" class="waves-effect waves-teal btn-flat">
+				<a id="btnReportLeft" class="waves-effect btn-flat">
 					<i class="material-icons">chevron_left</i></a>
-				<a id="btnReportRight" class="waves-effect waves-teal btn-flat">
+				<a id="btnReportRight" class="waves-effect btn-flat">
 					<i class="material-icons">chevron_right</i></a>
 			</div>
 		</div>
+		
 		<table id="secReportListing">
 			<thead>
 				<tr>
@@ -301,9 +302,22 @@ Currently, only attendance information is served
 				</tr>
 			</thead>
 			<tbody id="secReportListingBody">
-				<a id="btnLoadSections" class="waves-effect waves-light btn">Load Sections</a>
 			</tbody>
 		</table>
+
+		
+		<div class="input-field" id="limitSelectionWrapper">
+			<select id="secReportLimitSelect">
+				<option value="10">10</option>
+				<option value="20" selected="true">20</option>
+				<option value="50">50</option>
+				<option value="100">100</option>
+				<option value="500">500</option>
+				<option value="1000">1000</option>
+			</select>
+			<label>Entries per page</label>
+		</div>
+		</div>
 	</div>
 	
 	<div id="about">

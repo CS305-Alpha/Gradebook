@@ -31,16 +31,15 @@ var displayedSection = {"id":null, "sectioncourse":null, "sectionnumber":null,
 	"sectiontitle":null, "sectionschedule":null, "sectionlocation":null,
 	"sectioninstructors":null};
 
-/* 
-Each instance of connInfo as a parameter in a function definition refers to an 
- object with the following keys, which are used as part of the REST API calls to
- the Gradebook server:
-	"host":String, "port":Number, "database":String, "user":String,
-	 "password":String, "instructorid":Number
-*/
-
+var secReportOffset = 0;
+var secReportLimit = 20;
+var secReportCount = 0;
 
 $(document).ready(function() {
+	$('.btn').addClass('red');
+	$('.btn-floating').addClass('red');
+	$('.card-panel').addClass('red');
+
 	$('select').material_select(); //load dropdown boxes
 
 	$('#dbInfoBox').collapsible({
@@ -93,7 +92,9 @@ $(document).ready(function() {
 				$('#dbInfoBox').collapsible('close', 0);
 				$('#dbInfoArrow').html('keyboard_arrow_down');
 
-				popYears(dbInfo);
+				popYears(dbInfo, '#yearSelect');
+				popYears(dbInfo, '#secReportYear'); //currently only populates user years, should populate institution years
+				setSeasons(null, '#yearSelect');
 			});
 		}
 		else {
@@ -105,64 +106,66 @@ $(document).ready(function() {
 
 	$('#yearSelect').change(function() {
 		var year = $('#yearSelect').val();
-		popSeasons(dbInfo, year);
+		popSeasons(dbInfo, year, '#seasonSelect');
+		$('#sectionListBody').html(''); //clear section list
 	});
 
 	$('#seasonSelect').change(function() {
 		var year = $('#yearSelect').val();
 		var season = $('#seasonSelect').val();
+		$('#sectionListBody').html(''); //clear section list
 		listCourses(dbInfo, year, season);
 	});
 
-  var secReportOffset = 0;
-  var secReportLimit = 100;
-  $('#btnReportLeft').click(function() {
-	  secReportOffset -= secReportLimit;
+	$('#btnReportLeft').click(function() {
+		if (secReportOffset > 0) {
+			secReportOffset -= secReportLimit;
 
-	  if (secReportOffset < 0) {
-		  secReportOffset = 0;
-	  }
+			if (secReportOffset < 0) {
+				secReportOffset = 0;
+			}
+	
+			var year = $('#secReportYear').val();
+			var season = $('#secReportSeason').val();
+	
+			$('#secReportListing').fadeOut(200, function() {
+				popSecReport(dbInfo, year, season, secReportOffset, secReportLimit, function() {
+					$('#secReportListing').fadeIn(200);
+				});
+			});
+		}
+	});
 
-	  $('#btnLoadSections').click();
-  });
+	$('#btnReportRight').click(function() {
+		if (secReportOffset < secReportCount - secReportLimit) {
+			secReportOffset += secReportLimit;
 
-  $('#btnReportRight').click(function() {
-	  secReportOffset += secReportLimit;
+			if (secReportOffset > secReportCount - secReportLimit) {
+				secReportOffset = secReportCount - secReportLimit;
+			}
+	
+			var year = $('#secReportYear').val();
+			var season = $('#secReportSeason').val();
+			$('#secReportListing').fadeOut(200, function() {
+				popSecReport(dbInfo, year, season, secReportOffset, secReportLimit, function() {
+					$('#secReportListing').fadeIn(200);
+				});
+			});
+		}
+	});
 
-	  if (secReportOffset > sectionReportObj.SectionCount - secReportLimit) {
-		  secReportOffset = sectionReportObj.SectionCount - secReportLimit;
-	  }
+	$('#secReportLimitSelect').change(function() {
+		secReportLimit = parseInt($('#secReportLimitSelect').val());
 
-	  $('#btnLoadSections').click();
-  });
+		var year = $('#secReportYear').val();
+		var season = $('#secReportSeason').val();
+		$('#secReportListing').fadeOut(200, function() {
+			popSecReport(dbInfo, year, season, secReportOffset, secReportLimit, function() {
+				$('#secReportListing').fadeIn(200);
+			});
+		});
+	});
 
-  $('#btnLoadSections').click(function() {
-	  console.log("CourseCount: " + sectionReportObj.CourseCount);
-	  var secReportRows = "";
-
-	  $('#secReportoffset').html((secReportOffset + 1));
-
-	  var lastSection = secReportOffset + secReportLimit;
-	  if (lastSection > sectionReportObj.SectionCount) {
-		  lastSection = sectionReportObj.SectionCount;
-	  }
-
-	  $('#secReportOffsetWLimit').html(lastSection);
-	  $('#secReportTotal').html(sectionReportObj.SectionCount);
-
-	  for(var i = 0; i < sectionReportObj.Sections.length; i++) {
-		  secReportRows += '<tr>';
-		  secReportRows += '<td>' + sectionReportObj.Sections[i].course + '</td>';
-		  secReportRows += '<td>' + sectionReportObj.Sections[i].sectionnumber + '</td>';
-		  secReportRows += '<td>' + sectionReportObj.Sections[i].title + '</td>';
-		  secReportRows += '<td>' + sectionReportObj.Sections[i].schedule + '</td>';
-		  secReportRows += '<td>' + sectionReportObj.Sections[i].location + '</td>';
-		  secReportRows += '<td>' + sectionReportObj.Sections[i].instructors + '</td>';
-		  secReportRows += '</tr>';
-	  }
-	  $('#secReportListingBody').html(secReportRows);
-  });
-  
 	$('#btnReturnToSelect').click(function() {
 		$('#currentSelection').slideUp(500, function() {
 			$('#attnOptionsBox-wrapper').fadeOut();
@@ -176,17 +179,63 @@ $(document).ready(function() {
 		popAttendance(dbInfo, displayedSection);
 	});
 
+	$('#secReportYear').change(function() {
+		var year = $('#secReportYear').val();
+		popSeasons(dbInfo, year, '#secReportSeason');
+		$('#secReportTableWrapper').fadeOut(500, function() {
+			$('#secReportListingBody').html(''); //clear section list
+		});
+	});
+
+	$('#secReportSeason').change(function() {
+		var year = $('#secReportYear').val();
+		var season = $('#secReportSeason').val();
+		
+		$('#secReportTableWrapper').fadeOut(500, function() {
+			$('#currSectionReport').fadeOut(200);
+			$('#secReportListingBody').html('');
+			popSecReport(dbInfo, year, season, secReportOffset, secReportLimit, function(termSummary) {
+				secReportCount = termSummary.SectionCount;
+
+				$('#secReportoffset').html((secReportOffset + 1));
+		
+				var lastSection = secReportOffset + secReportLimit;
+				if (lastSection > secReportCount) {
+					lastSection = secReportCount;
+				}
+			
+				$('#secReportOffsetWLimit').html(lastSection);
+				$('#secReportTotal').html(secReportCount);
+
+				var summary = '';
+				summary += '<h4>' + $('#secReportSeason option:selected').text() + ' ' + year + "</h4>";
+				summary += "<ul>"
+				summary += "<li><strong>Course count: </strong>" + termSummary.CourseCount + "</li>";
+				summary += "<li><strong>Section count: </strong>" + termSummary.SectionCount + "</li>";
+				summary += "<li><strong>Instructor count: </strong>" + termSummary.InstructorCount + "</li>";
+				summary += "<li><strong>Student count: </strong>" + termSummary.StudentCount + "</li>";
+				summary += "</ul>";
+				$('#secReportTerm').html(summary);
+				
+				$('#secReportTableWrapper, #currSectionReport').fadeIn(500);
+			});
+		});
+	});
+
 	$('#logout').click(function() {
 		dbInfo = null;
-		userInfo = null;
+		userInfo =  {"id": null, "fname":null, "mname":null, "lname": null, "role": null};
 		setYears(null); //reset Attendance dropdowns
 
-
-		$('#sectionListBody').html(''); //clear section list
+		//clear section lists
+		$('#sectionListBody').html('');
+		$('#secReportListingBody, #secReportTotal, #secReportOffsetWLimit, #secReportoffset, #secReportTerm').html('');
+		$('#currSectionReport, #secReportTableWrapper').css('display', 'none');
+		setYears(null, '#secReportYear');
+		setSeasons(null, '#secReportSeason');
 
 		//hide and reset profile
 		$('#profile').css('display', 'none');
-
 		$('#givenName').html('');
 		
 		//show Login tab, hide Roster, Attendance, Grades, and Reports tabs
@@ -240,10 +289,10 @@ function getDBFields() {
 };
 
 function serverLogin(connInfo, email, callback) {
-	userInfo.role = $('#roleSelect option:selected').val();
+	var groupRole = $('#roleSelect option:selected').val();
 
 	//"create a copy" of connInfo with user's group role and set to urlParams
-	var urlParams = $.extend({}, connInfo, {userRole:userInfo.role}); 
+	var urlParams = $.extend({}, connInfo, {userRole:groupRole}); 
 
 	$.ajax('login', {
 		dataType: 'json',
@@ -251,7 +300,8 @@ function serverLogin(connInfo, email, callback) {
 		success: function(result) {
 			//populate dbInfo and userInfo with info from response
 			userInfo = { id:result.user.id, fname:result.user.fname, 
-			mname:result.user.mname, lname:result.user.lname};
+			mname:result.user.mname, lname:result.user.lname,
+			role:$('#roleSelect option:selected').val()};
 
 			//hide Login tab, show Roster, Attendance, Grades, and Reports tabs
 			$('#loginTab').css('display', 'none');
@@ -275,17 +325,19 @@ function serverLogin(connInfo, email, callback) {
 	});
 };
 
-function popYears(connInfo) {
+function popYears(connInfo, select) {
+	var urlParams = $.extend({}, connInfo, {userID:userInfo.id, userRole:userInfo.role});
+
 	$.ajax('years', {
 		dataType: 'json',
-		data: connInfo,
+		data: urlParams,
 		success: function(result) {
 			var years = '';
 			for(var i = 0; i < result.years.length; i++) {
 				years += '<option value="' + result.years[i] + '">' +
 					result.years[i] + '</option>';
 			}
-			setYears(years);
+			setYears(years, select);
 		},
 		error: function(result) {
 			showAlert('<p>Error while retrieving years</p>');
@@ -294,8 +346,8 @@ function popYears(connInfo) {
 	});
 };
 
-function popSeasons(connInfo, year) {
-	var urlParams = $.extend({}, connInfo, {year: year});
+function popSeasons(connInfo, year, select) {
+	var urlParams = $.extend({}, connInfo, {year: year, userID:userInfo.id, userRole:userInfo.role});
 	$.ajax('seasons', {
 		dataType: 'json',
 		data: urlParams,
@@ -305,7 +357,7 @@ function popSeasons(connInfo, year) {
 				seasons += '<option value="' + result.seasons[i].seasonorder +
 					'">' + result.seasons[i].seasonname + '</option>';
 			}
-			setSeasons(seasons);
+			setSeasons(seasons, select);
 		},
 		error: function(result) {
 			showAlert('<p>Error while retrieving seasons</p>');
@@ -414,24 +466,23 @@ function appendSectionList(htmlText) {
 	$('#sectionListBody').html(currList + htmlText);
 };
 
-function setYears(htmlText) {
+function setYears(htmlText, select) {
 	var content = '<option value="" disabled="true" selected="true">' +
 		'Choose year</option>' + htmlText;
-	$('#yearSelect').html(content);
-	$('#yearSelect').prop('disabled', htmlText == null);
-	$('#yearSelect').material_select(); //reload dropdown
+	$(select).html(content);
+	$(select).prop('disabled', htmlText == null);
+	$(select).material_select(); //reload dropdown
 
 	
 	setSeasons(null); //reset dependent field
 };
 
-function setSeasons(htmlText) {
+function setSeasons(htmlText, select) {
 	var content = '<option value="" disabled="true" selected="true">' +
 		'Choose season</option>' + htmlText;
-	$('#seasonSelect').html(content);
-	$('#seasonSelect').prop('disabled', htmlText == null);
-	$('#seasonSelect').material_select(); //reload dropdown
-	$('#sectionListBody').html(''); //clear section list
+	$(select).html(content);
+	$(select).prop('disabled', htmlText == null);
+	$(select).material_select(); //reload dropdown
 };
 
 function setAttendance(htmlText) {
@@ -469,6 +520,44 @@ function setAttendance(htmlText) {
 		$('#attnOptionsBox-wrapper').fadeIn();
 		$('#attendanceData').fadeIn();
 	}
+};
+
+function popSecReport(conninfo, year, season, offset, limit, callback) {
+	var secReportParams = $.extend({}, conninfo, {year:year, season:season, offset:offset, limit:limit});
+	
+	$.ajax('sectionreport', {
+		dataType: 'json',
+		data: secReportParams,
+		success: function(result) {
+			var secReportRows = "";
+			for(var i = 0; i < result.Sections.length; i++) {
+				secReportRows += '<tr>';
+				secReportRows += '<td>' + result.Sections[i].course + '</td>';
+				secReportRows += '<td>' + result.Sections[i].sectionnumber + '</td>';
+				secReportRows += '<td>' + result.Sections[i].title + '</td>';
+				secReportRows += '<td>' + result.Sections[i].schedule + '</td>';
+				secReportRows += '<td>' + result.Sections[i].location + '</td>';
+				secReportRows += '<td>' + result.Sections[i].instructors + '</td>';
+				secReportRows += '</tr>';
+			}
+		
+			$('#secReportListingBody').html(secReportRows);
+		
+			if (typeof(callback) === 'function') {
+				var termSummary = {
+					"CourseCount":result.CourseCount,
+					"SectionCount":result.SectionCount,
+					"InstructorCount":result.InstructorCount,
+					"StudentCount":result.StudentCount
+				};
+				callback(termSummary);
+			}
+		},
+		error: function(result) {
+			showAlert('<p>Error while retrieving section report</p>');
+			console.log(result);
+		}
+	});
 };
 
 // Returns list of courses for a given user id

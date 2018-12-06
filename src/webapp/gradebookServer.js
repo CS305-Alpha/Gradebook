@@ -196,11 +196,11 @@ app.get('/years', function(request, response) {
 
    //Set the query text
    var queryParams;
-   if(userRole == 'alpha_GB_Instructor') {
+   if(userRole == 'instructor') {
       queryText = 'SELECT Year FROM getInstructorYears($1);';
       queryParams = [userID];
    }
-   else if(userRole == 'alpha_GB_Student') {
+   else if(userRole == 'student') {
       queryText = 'SELECT Year FROM getYearsAsStudent();';
    }
    else {
@@ -232,7 +232,7 @@ app.get('/seasons', function(request, response) {
       passwordText, request.query.host, request.query.port);
 
    //Get the params from the url
-   var userID = request.query.userid;
+   var userID = request.query.userID;
    var userRole = request.query.userRole;
    var year = request.query.year;
    var queryText;
@@ -241,12 +241,13 @@ app.get('/seasons', function(request, response) {
    //Set the query
    var queryParams;
 
-   if(userRole == 'alpha_GB_Instructor') {
+   if(userRole == 'instructor') {
       queryText = 'SELECT SeasonOrder, SeasonName FROM getInstructorSeasons($1, $2);';
       queryParams = [userID, year];
    }
-   else if(userRole == 'alpha_GB_Student') {
-      queryText = 'SELECT SeasonOrder, SeasonName FROM getSeasonsAsStudent();';
+   else if(userRole == 'student') {
+      queryText = 'SELECT SeasonOrder, SeasonName FROM getSeasonsAsStudent($1);';
+      queryParams = [year];
    }
    else {
       queryText = 'SELECT S."Order" AS SeasonOrder, S.Name AS SeasonName FROM' + 
